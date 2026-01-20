@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer - My Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        tomato: {
+                            500: '#ff6347',
+                            600: '#e5533d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-900 text-slate-200 min-h-screen font-sans flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur z-20">
+        <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="../index.html" class="text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </a>
+                <h1 class="font-bold text-white flex items-center gap-2">
+                    <span class="text-xl">🍅</span> Pomodoro
+                </h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex items-center justify-center p-6">
+        <div class="w-full max-w-md">
+            
+            <!-- Timer Card -->
+            <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 shadow-2xl text-center relative overflow-hidden">
+                
+                <!-- Progress Ring Background (Simplified as border for now, or just layout) -->
+                
+                <!-- Mode Switcher -->
+                <div class="flex justify-center gap-2 mb-10 bg-slate-900/50 p-1 rounded-xl inline-flex mx-auto">
+                    <button class="mode-btn px-4 py-2 rounded-lg text-sm font-medium transition-all bg-indigo-600 text-white shadow-lg" data-mode="work" data-time="25">Work</button>
+                    <button class="mode-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all" data-mode="short" data-time="5">Short Break</button>
+                    <button class="mode-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all" data-mode="long" data-time="15">Long Break</button>
+                </div>
+
+                <!-- Timer Display -->
+                <div class="mb-10 relative">
+                    <div class="text-8xl font-bold font-mono tracking-tighter text-white" id="timer-display">25:00</div>
+                    <p class="text-slate-400 mt-2" id="status-text">Time to focus!</p>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex items-center justify-center gap-6">
+                    <button id="toggle-btn" class="w-16 h-16 rounded-full bg-indigo-500 hover:bg-indigo-400 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 transition-all transform hover:scale-105 active:scale-95">
+                        <svg id="play-icon" class="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        <svg id="pause-icon" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </button>
+                    
+                    <button id="reset-btn" class="w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center transition-all hover:rotate-180">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Task List Placeholder (Visual only) -->
+            <div class="mt-8 text-center">
+                <p class="text-slate-500 text-sm">Simple, distraction-free timer.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Audio -->
+    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+    <script>
+        // State
+        let timeLeft = 25 * 60;
+        let timerId = null;
+        let isRunning = false;
+        let currentMode = 'work'; // work, short, long
+
+        // Elements
+        const timerDisplay = document.getElementById('timer-display');
+        const statusText = document.getElementById('status-text');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const modeBtns = document.querySelectorAll('.mode-btn');
+        const alarmSound = document.getElementById('alarm-sound');
+
+        // Functions
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            timerDisplay.textContent = formatTime(timeLeft);
+            document.title = `${formatTime(timeLeft)} - Pomodoro`;
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            toggleBtn.classList.replace('bg-indigo-500', 'bg-red-500');
+            toggleBtn.classList.replace('hover:bg-indigo-400', 'hover:bg-red-400');
+            toggleBtn.classList.replace('shadow-indigo-500/30', 'shadow-red-500/30');
+            
+            playIcon.classList.add('hidden');
+            pauseIcon.classList.remove('hidden');
+
+            timerId = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateDisplay();
+                } else {
+                    clearInterval(timerId);
+                    isRunning = false;
+                    alarmSound.play();
+                    alert('Time is up!');
+                    resetTimerState();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (!isRunning) return;
+            
+            clearInterval(timerId);
+            isRunning = false;
+            
+            toggleBtn.classList.replace('bg-red-500', 'bg-indigo-500');
+            toggleBtn.classList.replace('hover:bg-red-400', 'hover:bg-indigo-400');
+            toggleBtn.classList.replace('shadow-red-500/30', 'shadow-indigo-500/30');
+            
+            playIcon.classList.remove('hidden');
+            pauseIcon.classList.add('hidden');
+        }
+
+        function resetTimerState() {
+            pauseTimer();
+            // Reset time based on current mode
+            const activeBtn = document.querySelector('.mode-btn[data-mode="' + currentMode + '"]');
+            if (activeBtn) {
+                timeLeft = parseInt(activeBtn.dataset.time) * 60;
+            } else {
+                timeLeft = 25 * 60;
+            }
+            updateDisplay();
+            document.title = 'Pomodoro Timer - My Lab';
+        }
+
+        function switchMode(btn) {
+            // UI Update
+            modeBtns.forEach(b => {
+                b.classList.remove('bg-indigo-600', 'text-white', 'shadow-lg');
+                b.classList.add('text-slate-400');
+            });
+            btn.classList.remove('text-slate-400');
+            btn.classList.add('bg-indigo-600', 'text-white', 'shadow-lg');
+
+            // Logic Update
+            currentMode = btn.dataset.mode;
+            const minutes = parseInt(btn.dataset.time);
+            timeLeft = minutes * 60;
+            
+            // Status Text
+            if (currentMode === 'work') statusText.textContent = 'Time to focus!';
+            else if (currentMode === 'short') statusText.textContent = 'Time for a coffee break!';
+            else statusText.textContent = 'Time for a good rest!';
+
+            pauseTimer();
+            updateDisplay();
+        }
+
+        // Event Listeners
+        toggleBtn.addEventListener('click', () => {
+            if (isRunning) pauseTimer();
+            else startTimer();
+        });
+
+        resetBtn.addEventListener('click', resetTimerState);
+
+        modeBtns.forEach(btn => {
+            btn.addEventListener('click', () => switchMode(btn));
+        });
+
+        // Init
+        updateDisplay();
+    </script>
+</body>
+</html>

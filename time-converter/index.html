@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Zone Converter - My Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 min-h-screen font-sans flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur z-20">
+        <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="../index.html" class="text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </a>
+                <h1 class="font-bold text-white flex items-center gap-2">
+                    <span class="text-xl">⏰</span> Time Zone Converter
+                </h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-4xl mx-auto w-full p-6">
+        
+        <!-- Base Time Input -->
+        <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg mb-8">
+            <label class="block text-sm font-medium text-slate-400 mb-2">Select Date & Time (Local)</label>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <input type="datetime-local" id="base-time" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-lg">
+                <button id="reset-btn" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg transition-colors font-medium">
+                    Reset to Now
+                </button>
+            </div>
+        </div>
+
+        <!-- Time Zones Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="zones-container">
+            <!-- Zones will be populated here -->
+        </div>
+
+    </main>
+
+    <script>
+        const zones = [
+            { name: "Los Angeles (PST/PDT)", zone: "America/Los_Angeles", flag: "🇺🇸" },
+            { name: "New York (EST/EDT)", zone: "America/New_York", flag: "🇺🇸" },
+            { name: "London (GMT/BST)", zone: "Europe/London", flag: "🇬🇧" },
+            { name: "Paris (CET/CEST)", zone: "Europe/Paris", flag: "🇫🇷" },
+            { name: "Berlin (CET/CEST)", zone: "Europe/Berlin", flag: "🇩🇪" },
+            { name: "Dubai (GST)", zone: "Asia/Dubai", flag: "🇦🇪" },
+            { name: "Beijing / Shanghai (CST)", zone: "Asia/Shanghai", flag: "🇨🇳" },
+            { name: "Tokyo (JST)", zone: "Asia/Tokyo", flag: "🇯🇵" },
+            { name: "Sydney (AEDT/AEST)", zone: "Australia/Sydney", flag: "🇦🇺" }
+        ];
+
+        const baseTimeInput = document.getElementById('base-time');
+        const resetBtn = document.getElementById('reset-btn');
+        const zonesContainer = document.getElementById('zones-container');
+
+        function init() {
+            setNow();
+            renderZones();
+            
+            baseTimeInput.addEventListener('input', updateZones);
+            resetBtn.addEventListener('click', () => {
+                setNow();
+                updateZones();
+            });
+            
+            // Auto update every minute if user hasn't manually changed it (optional, skipped for simplicity)
+        }
+
+        function setNow() {
+            const now = new Date();
+            // Format for datetime-local input: YYYY-MM-DDTHH:mm
+            const isoString = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+            baseTimeInput.value = isoString;
+        }
+
+        function getDateFromInput() {
+            return new Date(baseTimeInput.value);
+        }
+
+        function formatTime(date, timeZone) {
+            try {
+                return new Intl.DateTimeFormat('en-US', {
+                    timeZone: timeZone,
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true,
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                }).format(date);
+            } catch (e) {
+                return 'Invalid Time Zone';
+            }
+        }
+
+        function getOffset(date, timeZone) {
+             try {
+                const tzDate = new Date(date.toLocaleString('en-US', { timeZone }));
+                const localDate = new Date(date.toLocaleString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }));
+                
+                // This offset calculation is a bit tricky with pure JS due to DST nuances.
+                // A simpler visual way is often better than showing raw offsets like "+08:00".
+                // Let's just rely on the formatted time which is accurate.
+                
+                // But to show relative time difference (e.g., +8h):
+                // We can approximate by comparing hours, but date boundaries make it hard.
+                // Let's skip raw offset display for now and focus on clear time display.
+                return ''; 
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function renderZones() {
+            zonesContainer.innerHTML = '';
+            const baseDate = getDateFromInput();
+
+            zones.forEach(item => {
+                const timeString = formatTime(baseDate, item.zone);
+                
+                const card = document.createElement('div');
+                card.className = 'bg-slate-800 rounded-xl p-5 border border-slate-700 flex items-center justify-between hover:border-indigo-500 transition-colors';
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xl">${item.flag}</span>
+                            <h3 class="font-medium text-slate-300">${item.name}</h3>
+                        </div>
+                        <p class="text-xs text-slate-500 font-mono">${item.zone}</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xl font-bold text-white tracking-wide time-display">${timeString.split(', ')[2]}</div>
+                        <div class="text-sm text-indigo-400 font-medium date-display">${timeString.split(', ')[0]}, ${timeString.split(', ')[1]}</div>
+                    </div>
+                `;
+                
+                zonesContainer.appendChild(card);
+            });
+        }
+
+        function updateZones() {
+            const baseDate = getDateFromInput();
+            const timeDisplays = document.querySelectorAll('.time-display');
+            const dateDisplays = document.querySelectorAll('.date-display');
+
+            zones.forEach((item, index) => {
+                const timeString = formatTime(baseDate, item.zone);
+                if (timeDisplays[index] && dateDisplays[index]) {
+                     // timeString format example: "Mon, Jan 20, 10:30 PM"
+                     // We split by comma space
+                     const parts = timeString.split(', ');
+                     // parts[0] = Mon
+                     // parts[1] = Jan 20
+                     // parts[2] = 10:30 PM
+                     
+                     if (parts.length >= 3) {
+                         timeDisplays[index].textContent = parts[2];
+                         dateDisplays[index].textContent = `${parts[0]}, ${parts[1]}`;
+                     } else {
+                         // Fallback
+                         timeDisplays[index].textContent = timeString;
+                     }
+                }
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
