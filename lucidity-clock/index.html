@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Lucidity Clock | 清醒时钟</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                        digital: ['"Share Tech Mono"', 'monospace'],
+                    },
+                    colors: {
+                        cyber: {
+                            black: '#050505',
+                            dark: '#0a0a0a',
+                            gray: '#1a1a1a',
+                            green: '#00ff41',
+                            greenDim: 'rgba(0, 255, 65, 0.1)',
+                            orange: '#ff5f00',
+                            orangeDim: 'rgba(255, 95, 0, 0.1)',
+                            text: '#e0e0e0',
+                            dim: '#505050'
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'scanline': 'scanline 8s linear infinite',
+                    },
+                    keyframes: {
+                        scanline: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100%)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050505;
+            color: #e0e0e0;
+            font-family: 'JetBrains Mono', monospace;
+            overflow: hidden; /* Prevent scroll on full screen apps */
+        }
+        
+        .scanline::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* CRT Flicker effect */
+        .crt::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 2;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.027906; }
+            5% { opacity: 0.048532; }
+            10% { opacity: 0.030206; }
+            15% { opacity: 0.052012; }
+            20% { opacity: 0.028906; }
+            25% { opacity: 0.045532; }
+            30% { opacity: 0.026206; }
+            35% { opacity: 0.050012; }
+            40% { opacity: 0.030906; }
+            45% { opacity: 0.044532; }
+            50% { opacity: 0.025206; }
+            55% { opacity: 0.048012; }
+            60% { opacity: 0.029906; }
+            65% { opacity: 0.046532; }
+            70% { opacity: 0.027206; }
+            75% { opacity: 0.049012; }
+            80% { opacity: 0.028906; }
+            85% { opacity: 0.047532; }
+            90% { opacity: 0.031206; }
+            95% { opacity: 0.046012; }
+            100% { opacity: 0.029206; }
+        }
+
+        .neon-text-green {
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.5), 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+        
+        .neon-text-orange {
+            text-shadow: 0 0 5px rgba(255, 95, 0, 0.5), 0 0 10px rgba(255, 95, 0, 0.3);
+        }
+
+        .border-cyber {
+            border: 1px solid #1a1a1a;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Custom scrollbar for modal content if needed */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+
+        [v-cloak] { display: none; }
+
+        /* Coin Explosion Effect */
+        .coin-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #ffd700;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 20;
+            box-shadow: 0 0 6px #ffae00;
+        }
+
+        @keyframes coin-burst {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen scanline relative">
+    <div id="app" v-cloak class="h-full w-full flex flex-col p-6 relative z-10 max-w-7xl mx-auto">
+        
+        <!-- Header / Status Bar -->
+        <header class="flex justify-between items-center mb-8 border-b border-cyber-gray pb-4">
+            <div class="flex items-center gap-4">
+                <a href="../index.html" class="text-cyber-dim hover:text-cyber-green transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </a>
+                <h1 class="text-xl font-bold tracking-wider text-cyber-text uppercase">
+                    Lucidity Clock <span class="text-xs text-cyber-dim ml-2">v1.0.0 // STATUS: DETACHED</span>
+                </h1>
+            </div>
+            <button @click="showSettings = true" class="text-cyber-dim hover:text-cyber-text transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 content-center">
+            
+            <!-- Centerpiece: Money Ticker -->
+            <div ref="moneyContainer" class="lg:col-span-8 flex flex-col justify-center items-center bg-cyber-dark border border-cyber-gray p-8 rounded-lg relative overflow-hidden group">
+                <div class="absolute top-0 left-0 w-full h-1 bg-cyber-green opacity-50"></div>
+                <div class="absolute inset-0 bg-cyber-greenDim opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+                
+                <h2 class="text-cyber-dim uppercase text-sm tracking-[0.2em] mb-4">Money Earned Today</h2>
+                <div class="font-digital text-6xl md:text-8xl lg:text-9xl text-cyber-green neon-text-green tracking-tighter">
+                    ¥{{ formattedMoney }}
+                </div>
+                <div class="text-cyber-dim mt-4 font-mono text-xs">
+                    RATE: ¥{{ (salaryPerSecond || 0).toFixed(4) }}/SEC
+                </div>
+            </div>
+
+            <!-- Side Panel: Stats & Mantra -->
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                
+                <!-- Progress Bar -->
+                <div class="bg-cyber-dark border border-cyber-gray p-6 rounded-lg">
+                    <h3 class="text-cyber-dim uppercase text-xs tracking-widest mb-4">Day Completion Protocol</h3>
+                    <div class="relative h-4 bg-cyber-gray rounded-full overflow-hidden mb-2">
+                        <div class="absolute top-0 left-0 h-full bg-cyber-green shadow-[0_0_10px_rgba(0,255,65,0.5)] transition-all duration-1000 ease-out" 
+                             :style="{ width: progressPercentage + '%' }"></div>
+                    </div>
+                    <div class="flex justify-between items-end">
+                        <span class="text-2xl font-digital text-white">{{ (progressPercentage || 0).toFixed(1) }}%</span>
+                        <span class="text-xs text-cyber-green text-right">
+                            <span v-if="timeLeft.isOver">FREEDOM ACHIEVED</span>
+                            <span v-else>DISTANCE TO FREEDOM:<br>{{ timeLeft.hours }}h {{ timeLeft.minutes }}m LEFT</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Mantra Zone -->
+                <div class="bg-cyber-dark border border-cyber-gray p-6 rounded-lg flex-1 flex flex-col justify-center relative cursor-pointer hover:border-cyber-text transition-colors" @click="rotateMantra">
+                    <div class="absolute top-2 right-2">
+                         <div class="w-2 h-2 rounded-full bg-cyber-green animate-pulse"></div>
+                    </div>
+                    <h3 class="text-cyber-dim uppercase text-xs tracking-widest mb-4">Psychological Defense</h3>
+                    <p class="text-lg md:text-xl text-cyber-text leading-relaxed font-light italic">
+                        "{{ currentMantra }}"
+                    </p>
+                    <p class="text-cyber-dim text-xs mt-4 text-right">CLICK TO REFRESH</p>
+                </div>
+                
+                <!-- SOS Button -->
+                <button @click="triggerSOS" class="group bg-cyber-dark border border-cyber-orange p-4 rounded-lg hover:bg-cyber-orange hover:text-black transition-all duration-300 flex items-center justify-center gap-3">
+                    <span class="text-2xl group-hover:animate-bounce">🆘</span>
+                    <span class="font-bold tracking-wider text-cyber-orange group-hover:text-black">忍不住想较真？</span>
+                </button>
+            </div>
+        </main>
+
+        <!-- Settings Modal -->
+        <div v-if="showSettings" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-cyber-dark border border-cyber-green w-full max-w-md p-8 rounded-lg shadow-[0_0_30px_rgba(0,255,65,0.1)] relative">
+                <h2 class="text-2xl font-bold text-cyber-green mb-6 uppercase tracking-wider border-b border-cyber-gray pb-2">Configuration</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-cyber-dim uppercase mb-1">Monthly Salary (¥)</label>
+                        <input v-model.number="settings.salary" type="number" class="w-full bg-black border border-cyber-gray rounded p-2 text-cyber-text focus:border-cyber-green focus:outline-none focus:ring-1 focus:ring-cyber-green transition-colors font-mono">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-cyber-dim uppercase mb-1">
+                                Days / Month
+                                <span v-if="isLoadingHolidays" class="animate-pulse text-cyber-orange ml-1">Loading...</span>
+                            </label>
+                            <input v-model.number="settings.workingDays" type="number" class="w-full bg-black border border-cyber-gray rounded p-2 text-cyber-text focus:border-cyber-green focus:outline-none transition-colors font-mono" placeholder="Auto-calculating...">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-cyber-dim uppercase mb-1">Hours / Day (Auto)</label>
+                            <div class="w-full bg-black border border-cyber-gray border-dashed rounded p-2 text-cyber-dim font-mono">
+                                {{ (workingHoursPerDay || 0).toFixed(2) }} HRS
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-cyber-dim uppercase mb-1">Start Time</label>
+                            <input v-model="settings.startTime" type="time" class="w-full bg-black border border-cyber-gray rounded p-2 text-cyber-text focus:border-cyber-green focus:outline-none transition-colors font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-cyber-dim uppercase mb-1">End Time</label>
+                            <input v-model="settings.endTime" type="time" class="w-full bg-black border border-cyber-gray rounded p-2 text-cyber-text focus:border-cyber-green focus:outline-none transition-colors font-mono">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end gap-4">
+                    <button v-if="isConfigured" @click="showSettings = false" class="px-4 py-2 text-cyber-dim hover:text-white transition-colors">CANCEL</button>
+                    <button @click="saveSettings" class="px-6 py-2 bg-cyber-greenDim border border-cyber-green text-cyber-green hover:bg-cyber-green hover:text-black transition-all font-bold tracking-wider">INITIALIZE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SOS Overlay -->
+        <div v-if="showSOS" class="fixed inset-0 bg-cyber-black z-[60] flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300">
+            <div class="max-w-4xl border-l-4 border-cyber-orange pl-8 py-4">
+                <h2 class="text-4xl md:text-6xl font-bold text-cyber-orange leading-tight mb-8 neon-text-orange font-digital">
+                    {{ currentSOSMantra }}
+                </h2>
+            </div>
+            
+            <button @click="showSOS = false" class="mt-12 px-8 py-4 bg-transparent border-2 border-cyber-text text-cyber-text hover:bg-cyber-text hover:text-black transition-all rounded text-xl tracking-widest uppercase">
+                I Am Calm Now
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, onUnmounted, watch } = Vue;
+
+        const GENERAL_MANTRAS = [
+            "当前任务：扮演一个情绪稳定的成年人，直到下班。",
+            "记住：公司购买的是你的时间，不是你的才华，更不是你的情绪。",
+            "甚至不需要动用 50% 的 CPU，节能模式才是最优解。",
+            "不仅要接受他们的平庸，还要原谅他们的迟钝。这是工作的一部分。",
+            "把精益求精留给自己的作品，把‘差不多行了’留给公司。",
+            "这只是一笔生意。别在生意里谈感情，也别在生意里找认同。",
+            "你的价值不在于试图教会他们，而在于在这个环境中毫发无损地生存。",
+            "沉默是金。少说一句，内耗减半。"
+        ];
+
+        const SOS_MANTRAS = [
+            "警告：检测到主观能动性过载。这值得你消耗下班后的好心情吗？",
+            "深呼吸。你想证明自己是对的，还是想早点下班？",
+            "这只是一个草台班子，别演得太像真的。",
+            "收起你的完美主义。对于这个工资和这个环境，现在的产出已经溢价了。",
+            "不要试图在菜市场里演奏交响乐。快点做完，哪怕它不够好。",
+            "他在说胡话，但并没有扣你的钱。让他说，你负责微笑点头。",
+            "停下！你的才华很贵，别免费赠送给不识货的人。"
+        ];
+
+        createApp({
+            setup() {
+                // State
+                const settings = ref({
+                    salary: 10000,
+                    workingDays: 21.75,
+                    workingHours: 8,
+                    startTime: '09:00',
+                    endTime: '18:00'
+                });
+                
+                const showSettings = ref(false);
+                const showSOS = ref(false);
+                const currentMoney = ref(0);
+                const currentMantra = ref('');
+                const currentSOSMantra = ref('');
+                const now = ref(new Date());
+                const isConfigured = ref(false);
+                const isLoadingHolidays = ref(false);
+                const moneyContainer = ref(null);
+
+                // Timers
+                let moneyInterval = null;
+                let clockInterval = null;
+                let mantraInterval = null;
+
+                // Computed
+                const workingHoursPerDay = computed(() => {
+                    if (!settings.value.startTime || !settings.value.endTime) return 0;
+                    try {
+                        const [startH, startM] = settings.value.startTime.split(':').map(Number);
+                        const [endH, endM] = settings.value.endTime.split(':').map(Number);
+                        let hours = (endH + endM / 60) - (startH + startM / 60);
+                        if (hours < 0) hours += 24; // Handle overnight
+                        return isNaN(hours) ? 0 : hours;
+                    } catch (e) {
+                        return 0;
+                    }
+                });
+
+                const salaryPerSecond = computed(() => {
+                    // Use calculated working hours
+                    const totalSeconds = settings.value.workingDays * (workingHoursPerDay.value || 0) * 3600;
+                    return totalSeconds > 0 ? settings.value.salary / totalSeconds : 0;
+                });
+
+                const formattedMoney = computed(() => {
+                    return (currentMoney.value || 0).toFixed(1);
+                });
+
+                const todayWorkTimes = computed(() => {
+                    const start = new Date(now.value);
+                    const [startH, startM] = settings.value.startTime.split(':');
+                    start.setHours(parseInt(startH), parseInt(startM), 0, 0);
+
+                    const end = new Date(now.value);
+                    const [endH, endM] = settings.value.endTime.split(':');
+                    end.setHours(parseInt(endH), parseInt(endM), 0, 0);
+
+                    return { start, end };
+                });
+
+                const progressPercentage = computed(() => {
+                    const { start, end } = todayWorkTimes.value;
+                    const totalDuration = end - start;
+                    const elapsed = now.value - start;
+                    
+                    if (elapsed < 0) return 0;
+                    if (elapsed > totalDuration) return 100;
+                    
+                    return (elapsed / totalDuration) * 100;
+                });
+
+                const timeLeft = computed(() => {
+                    const { end } = todayWorkTimes.value;
+                    const diff = end - now.value;
+                    
+                    if (diff <= 0) return { isOver: true, hours: 0, minutes: 0 };
+                    
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    
+                    return { isOver: false, hours, minutes };
+                });
+
+                // Methods
+                const spawnCoins = () => {
+                    if (!moneyContainer.value) return;
+
+                    const count = 12; // Number of particles
+                    for (let i = 0; i < count; i++) {
+                        const el = document.createElement('div');
+                        el.classList.add('coin-particle');
+                        
+                        // Random angle and distance
+                        const angle = Math.random() * Math.PI * 2;
+                        const velocity = 50 + Math.random() * 100; // pixels
+                        const tx = Math.cos(angle) * velocity + 'px';
+                        const ty = Math.sin(angle) * velocity + 'px';
+                        
+                        el.style.setProperty('--tx', tx);
+                        el.style.setProperty('--ty', ty);
+                        
+                        // Center start position (relative to container)
+                        el.style.left = '50%';
+                        el.style.top = '50%';
+                        
+                        // Random animation duration
+                        el.style.animation = `coin-burst ${0.5 + Math.random() * 0.5}s ease-out forwards`;
+                        
+                        moneyContainer.value.appendChild(el);
+                        
+                        // Cleanup
+                        setTimeout(() => {
+                            el.remove();
+                        }, 1000);
+                    }
+                };
+
+                const fetchWorkingDays = async () => {
+                    isLoadingHolidays.value = true;
+                    const year = new Date().getFullYear();
+                    const month = new Date().getMonth(); // 0-indexed
+                    
+                    try {
+                        const response = await fetch(`https://timor.tech/api/holiday/year/${year}`, {
+                            method: 'GET',
+                            headers: {
+                                'User-Agent': 'Mozilla/5.0 (compatible; LucidityClock/1.0)'
+                            }
+                        });
+                        
+                        if (!response.ok) throw new Error('API failed');
+                        
+                        const data = await response.json();
+                        const holidays = data.holiday || {};
+                        
+                        let count = 0;
+                        const daysInMonth = new Date(year, month + 1, 0).getDate();
+                        
+                        for (let d = 1; d <= daysInMonth; d++) {
+                            const dateStr = `${(month + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+                            const dateObj = new Date(year, month, d);
+                            const dayOfWeek = dateObj.getDay(); // 0 = Sun, 6 = Sat
+                            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                            
+                            const apiInfo = holidays[dateStr];
+                            
+                            if (apiInfo) {
+                                // If exists in API
+                                // holiday: true => Day Off
+                                // holiday: false => Work Day (Makeup)
+                                if (apiInfo.holiday === false) {
+                                    count++; 
+                                }
+                            } else {
+                                // Not in API, standard weekend rule
+                                if (!isWeekend) {
+                                    count++;
+                                }
+                            }
+                        }
+                        
+                        if (count > 0) {
+                            settings.value.workingDays = count;
+                        }
+                    } catch (error) {
+                        console.warn('Failed to fetch holiday data, using fallback/manual value:', error);
+                        // Do not overwrite existing value if fetch fails
+                    } finally {
+                        isLoadingHolidays.value = false;
+                    }
+                };
+
+                const saveSettings = () => {
+                    // Save base settings
+                    // We don't save computed workingHours, but we save workingDays as a default
+                    localStorage.setItem('lucidity_settings', JSON.stringify({
+                        salary: settings.value.salary,
+                        workingDays: settings.value.workingDays,
+                        startTime: settings.value.startTime,
+                        endTime: settings.value.endTime
+                    }));
+                    showSettings.value = false;
+                    isConfigured.value = true;
+                    updateMoney(); // Force update immediately
+                };
+
+                const loadSettings = () => {
+                    const saved = localStorage.getItem('lucidity_settings');
+                    if (saved) {
+                        try {
+                            const parsed = JSON.parse(saved);
+                            settings.value = { ...settings.value, ...parsed };
+                            isConfigured.value = true;
+                        } catch (e) {
+                            console.error('Failed to parse settings', e);
+                            showSettings.value = true;
+                        }
+                    } else {
+                        showSettings.value = true;
+                    }
+                };
+
+                const updateMoney = () => {
+                    now.value = new Date();
+                    const { start, end } = todayWorkTimes.value;
+                    
+                    // Logic:
+                    // If before start: 0
+                    // If after end: full day earnings (salaryPerSecond * hours * 3600)
+                    // If during: salaryPerSecond * (now - start) in seconds
+                    
+                    const salaryPerSec = salaryPerSecond.value;
+                    let newMoney = 0;
+                    
+                    if (now.value < start) {
+                        newMoney = 0;
+                    } else if (now.value > end) {
+                        // Cap at max daily earning
+                        const dailySeconds = (end - start) / 1000;
+                        newMoney = salaryPerSec * dailySeconds;
+                    } else {
+                        const workedSeconds = (now.value - start) / 1000;
+                        newMoney = salaryPerSec * workedSeconds;
+                    }
+
+                    // Check for coin explosion (only on integer increase)
+                    if (Math.floor(newMoney) > Math.floor(currentMoney.value)) {
+                        spawnCoins();
+                    }
+                    currentMoney.value = newMoney;
+                };
+
+                const rotateMantra = () => {
+                    const randomIndex = Math.floor(Math.random() * GENERAL_MANTRAS.length);
+                    // Avoid repeat if possible
+                    let newMantra = GENERAL_MANTRAS[randomIndex];
+                    while (newMantra === currentMantra.value && GENERAL_MANTRAS.length > 1) {
+                        newMantra = GENERAL_MANTRAS[Math.floor(Math.random() * GENERAL_MANTRAS.length)];
+                    }
+                    currentMantra.value = newMantra;
+                };
+
+                const triggerSOS = () => {
+                    const randomIndex = Math.floor(Math.random() * SOS_MANTRAS.length);
+                    currentSOSMantra.value = SOS_MANTRAS[randomIndex];
+                    showSOS.value = true;
+                };
+
+                // Lifecycle
+                onMounted(() => {
+                    loadSettings();
+                    rotateMantra();
+                    
+                    // Try to fetch holidays if not explicitly set or just always update on load to keep fresh
+                    // But maybe only if settings are open or on initial load?
+                    // Let's fetch on mount to ensure we have latest data for the month
+                    fetchWorkingDays();
+
+                    // Update money frequently for the ticker effect
+                    moneyInterval = setInterval(updateMoney, 50); // 20fps is enough for text
+                    
+                    // Rotate mantra every 5 mins
+                    mantraInterval = setInterval(rotateMantra, 5 * 60 * 1000);
+                });
+
+                onUnmounted(() => {
+                    if (moneyInterval) clearInterval(moneyInterval);
+                    if (mantraInterval) clearInterval(mantraInterval);
+                });
+
+                return {
+                    settings,
+                    showSettings,
+                    showSOS,
+                    formattedMoney,
+                    salaryPerSecond,
+                    progressPercentage,
+                    timeLeft,
+                    currentMantra,
+                    currentSOSMantra,
+                    saveSettings,
+                    rotateMantra,
+                    triggerSOS,
+                    isConfigured,
+                    moneyContainer
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

@@ -22,5 +22,13 @@
     "icon": "🍅",
     "url": "./pomodoro/index.html",
     "tags": ["Productivity", "Vue"]
+  },
+  {
+    "id": "lucidity-clock",
+    "title": "The Lucidity Clock",
+    "description": "Digital wellness dashboard for emotional detachment and salary visualization.",
+    "icon": "👁️",
+    "url": "./lucidity-clock/index.html",
+    "tags": ["Wellness", "Cyberpunk", "Vue"]
   }
 ]
