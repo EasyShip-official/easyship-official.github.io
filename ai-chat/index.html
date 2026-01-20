@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat - My Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        .markdown-body p { margin-bottom: 0.75rem; }
+        .markdown-body p:last-child { margin-bottom: 0; }
+        .markdown-body pre { background: #1e293b; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0; }
+        .markdown-body code { background: rgba(255,255,255,0.1); padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.875em; }
+        .markdown-body pre code { background: transparent; padding: 0; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .markdown-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .markdown-body a { color: #60a5fa; text-decoration: underline; }
+        
+        /* Typing indicator dots */
+        .typing-dot {
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 h-screen flex flex-col overflow-hidden font-sans">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur z-20 flex-none">
+        <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="../index.html" class="text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </a>
+                <h1 class="font-bold text-white flex items-center gap-2">
+                    <span class="text-xl">🤖</span> AI Chat
+                </h1>
+            </div>
+            <button id="settings-btn" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Chat Area -->
+    <main class="flex-1 overflow-hidden relative flex flex-col max-w-4xl mx-auto w-full">
+        <!-- Messages -->
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-6 scroll-smooth">
+            <!-- Welcome Message -->
+            <div class="flex gap-4">
+                <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0">
+                    🤖
+                </div>
+                <div class="bg-slate-800 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] border border-slate-700">
+                    <p class="text-sm text-slate-200">Hello! I'm your AI assistant. Please configure your API settings first using the gear icon in the top right corner.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 bg-slate-900 border-t border-slate-800">
+            <form id="chat-form" class="relative flex gap-2 max-w-4xl mx-auto">
+                <textarea 
+                    id="user-input" 
+                    rows="1" 
+                    placeholder="Type a message..." 
+                    class="w-full bg-slate-800 text-white rounded-xl pl-4 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-700 resize-none overflow-hidden max-h-32"
+                    style="min-height: 48px;"
+                ></textarea>
+                <button 
+                    type="submit" 
+                    class="absolute right-2 bottom-2 p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    id="send-btn"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </form>
+            <div class="text-center mt-2">
+                 <p class="text-xs text-slate-500">Press Enter to send, Shift+Enter for new line</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl w-full max-w-md border border-slate-700 shadow-2xl transform transition-all scale-95 opacity-0" id="modal-content">
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-white mb-4">API Configuration</h2>
+                <form id="settings-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">Base URL</label>
+                        <input type="text" id="api-url" placeholder="https://api.openai.com/v1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" value="https://api.openai.com/v1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">API Key</label>
+                        <input type="password" id="api-key" placeholder="sk-..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">Model Name</label>
+                        <input type="text" id="api-model" placeholder="gpt-3.5-turbo" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" value="gpt-3.5-turbo">
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" id="close-settings" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const chatContainer = document.getElementById('chat-container');
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const modalContent = document.getElementById('modal-content');
+        const closeSettingsBtn = document.getElementById('close-settings');
+        const settingsForm = document.getElementById('settings-form');
+        
+        // Inputs
+        const apiUrlInput = document.getElementById('api-url');
+        const apiKeyInput = document.getElementById('api-key');
+        const apiModelInput = document.getElementById('api-model');
+
+        // State
+        let config = {
+            baseUrl: 'https://api.openai.com/v1',
+            apiKey: '',
+            model: 'gpt-3.5-turbo'
+        };
+
+        // Load Config
+        function loadConfig() {
+            const saved = localStorage.getItem('ai_chat_config');
+            if (saved) {
+                config = JSON.parse(saved);
+                apiUrlInput.value = config.baseUrl;
+                apiKeyInput.value = config.apiKey;
+                apiModelInput.value = config.model;
+            } else {
+                // Open settings if no key
+                openModal();
+            }
+        }
+
+        // Modal Logic
+        function openModal() {
+            settingsModal.classList.remove('hidden');
+            // Trigger reflow
+            void settingsModal.offsetWidth;
+            modalContent.classList.remove('scale-95', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }
+
+        function closeModal() {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                settingsModal.classList.add('hidden');
+            }, 200);
+        }
+
+        settingsBtn.addEventListener('click', openModal);
+        closeSettingsBtn.addEventListener('click', closeModal);
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) closeModal();
+        });
+
+        settingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            config = {
+                baseUrl: apiUrlInput.value.replace(/\/$/, ''), // remove trailing slash
+                apiKey: apiKeyInput.value.trim(),
+                model: apiModelInput.value.trim()
+            };
+            localStorage.setItem('ai_chat_config', JSON.stringify(config));
+            closeModal();
+            addSystemMessage('Settings saved successfully!');
+        });
+
+        // Chat Logic
+        function autoResizeTextarea() {
+            userInput.style.height = 'auto';
+            userInput.style.height = userInput.scrollHeight + 'px';
+        }
+
+        userInput.addEventListener('input', autoResizeTextarea);
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            if (!config.apiKey) {
+                openModal();
+                alert('Please enter your API Key first.');
+                return;
+            }
+
+            // UI Updates
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            addUserMessage(message);
+            
+            // API Call
+            await fetchCompletion(message);
+        });
+
+        function addUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'flex gap-4 flex-row-reverse';
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
+                    👤
+                </div>
+                <div class="bg-indigo-600 rounded-2xl rounded-tr-none px-4 py-3 max-w-[85%] text-white shadow-md">
+                    <p class="whitespace-pre-wrap text-sm">${escapeHtml(text)}</p>
+                </div>
+            `;
+            chatContainer.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addBotMessage() {
+            const div = document.createElement('div');
+            div.className = 'flex gap-4';
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0">
+                    🤖
+                </div>
+                <div class="bg-slate-800 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] border border-slate-700 shadow-sm text-slate-200 markdown-body">
+                    <div class="flex space-x-1 items-center h-6 loading-dots">
+                        <div class="w-2 h-2 bg-slate-500 rounded-full typing-dot"></div>
+                        <div class="w-2 h-2 bg-slate-500 rounded-full typing-dot"></div>
+                        <div class="w-2 h-2 bg-slate-500 rounded-full typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(div);
+            scrollToBottom();
+            return div.querySelector('.markdown-body');
+        }
+
+        function addSystemMessage(text) {
+             const div = document.createElement('div');
+             div.className = 'flex justify-center my-4';
+             div.innerHTML = `
+                <span class="text-xs text-slate-500 bg-slate-800/50 px-3 py-1 rounded-full">${text}</span>
+             `;
+             chatContainer.appendChild(div);
+             scrollToBottom();
+        }
+
+        async function fetchCompletion(userMessage) {
+            const contentDiv = addBotMessage();
+            let fullText = '';
+            
+            try {
+                const response = await fetch(`${config.baseUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${config.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: [
+                            { role: "system", content: "You are a helpful assistant. Use Markdown to format your responses." },
+                            { role: "user", content: userMessage }
+                        ],
+                        stream: true
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error?.message || `HTTP ${response.status}`);
+                }
+
+                // Handle Stream
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                // Remove loading dots
+                contentDiv.innerHTML = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') break;
+                            
+                            try {
+                                const parsed = JSON.parse(data);
+                                const content = parsed.choices[0]?.delta?.content || '';
+                                if (content) {
+                                    fullText += content;
+                                    // Render Markdown progressively (basic text for now to avoid flicker, or debounce)
+                                    // For simplicity and performance in vanilla JS, we can update innerHTML periodically or just text
+                                    // Here we re-render marked on every chunk (can be optimized)
+                                    contentDiv.innerHTML = marked.parse(fullText);
+                                    
+                                    // Highlight code blocks
+                                    contentDiv.querySelectorAll('pre code').forEach((block) => {
+                                        hljs.highlightElement(block);
+                                    });
+
+                                    scrollToBottom();
+                                }
+                            } catch (e) {
+                                console.error('Error parsing stream:', e);
+                            }
+                        }
+                    }
+                }
+
+            } catch (error) {
+                contentDiv.innerHTML = `<p class="text-red-400">Error: ${error.message}</p>`;
+                // Keep history clean? Maybe not.
+            }
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Init
+        loadConfig();
+    </script>
+</body>
+</html>

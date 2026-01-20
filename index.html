@@ -1,105 +1,182 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的个人主页</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>My Lab - Project Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+    </style>
 </head>
-<body>
-    <header>
-        <nav class="navbar">
-            <div class="logo">MyPortfolio</div>
-            <ul class="nav-links">
-                <li><a href="#home">首页</a></li>
-                <li><a href="#about">关于我</a></li>
-                <li><a href="#projects">项目</a></li>
-                <li><a href="#contact">联系</a></li>
-            </ul>
-            <div class="hamburger">
-                <i class="fas fa-bars"></i>
+<body class="bg-slate-900 text-slate-200 min-h-screen font-sans selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">🧪</span>
+                <h1 class="text-xl font-bold tracking-tight text-white">My Lab</h1>
             </div>
-        </nav>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-white transition-colors p-2 rounded-full hover:bg-slate-800">
+                <span class="sr-only">GitHub</span>
+                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+                </svg>
+            </a>
+        </div>
     </header>
 
-    <section id="home" class="hero">
-        <div class="hero-content">
-            <h1>你好，我是 <span class="highlight">开发者</span></h1>
-            <p>热爱编程，探索技术无限可能</p>
-            <a href="#projects" class="btn">查看我的作品</a>
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Intro -->
+        <div class="mb-12">
+            <h2 class="text-3xl font-extrabold text-white sm:text-4xl">Dashboard</h2>
+            <p class="mt-4 text-lg text-slate-400 max-w-2xl">
+                Welcome to my personal playground. Here you'll find a collection of my static web apps, tools, and experiments.
+            </p>
         </div>
-    </section>
 
-    <section id="about" class="section">
-        <div class="container">
-            <h2 class="section-title">关于我</h2>
-            <div class="about-content">
-                <div class="about-text">
-                    <p>我是一名全栈开发工程师，热衷于构建高效、可扩展的 Web 应用。我对新技术保持敏感，喜欢在 GitHub 上探索有趣的开源项目。</p>
-                    <p>技术栈：HTML/CSS/JavaScript, React, Node.js, Python。</p>
-                </div>
+        <!-- Grid Container -->
+        <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Loading Skeleton -->
+            <div class="animate-pulse bg-slate-800 rounded-xl h-48 border border-slate-700 p-6"></div>
+            <div class="animate-pulse bg-slate-800 rounded-xl h-48 border border-slate-700 p-6"></div>
+            <div class="animate-pulse bg-slate-800 rounded-xl h-48 border border-slate-700 p-6"></div>
+        </div>
+
+        <!-- Error Message Template (Hidden) -->
+        <div id="error-message" class="hidden text-center py-12">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-900/30 mb-4">
+                <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
             </div>
+            <h3 class="text-lg font-medium text-white">Failed to load projects</h3>
+            <p class="mt-2 text-slate-400">Please check if 'projects.json' exists and is valid.</p>
+            <p id="protocol-warning" class="mt-2 text-yellow-500 text-sm hidden">
+                ⚠️ It seems you are opening this file directly. Browsers block fetching JSON from local files for security. Please use a local web server (e.g., VS Code Live Server, Python http.server) or deploy to GitHub Pages.
+            </p>
         </div>
-    </section>
 
-    <section id="projects" class="section">
-        <div class="container">
-            <h2 class="section-title">我的项目</h2>
-            <div class="projects-grid">
-                <div class="project-card">
-                    <div class="project-info">
-                        <h3>个人博客系统</h3>
-                        <p>基于 React 和 Node.js 开发的个人博客平台，支持 Markdown 编辑。</p>
-                        <div class="project-links">
-                            <a href="#"><i class="fab fa-github"></i> 源码</a>
-                            <a href="#"><i class="fas fa-external-link-alt"></i> 演示</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="project-card">
-                    <div class="project-info">
-                        <h3>任务管理工具</h3>
-                        <p>一个轻量级的待办事项管理应用，使用 Vue.js 构建。</p>
-                        <div class="project-links">
-                            <a href="#"><i class="fab fa-github"></i> 源码</a>
-                            <a href="#"><i class="fas fa-external-link-alt"></i> 演示</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="project-card">
-                    <div class="project-info">
-                        <h3>数据可视化面板</h3>
-                        <p>使用 D3.js 展示复杂数据的交互式仪表盘。</p>
-                        <div class="project-links">
-                            <a href="#"><i class="fab fa-github"></i> 源码</a>
-                            <a href="#"><i class="fas fa-external-link-alt"></i> 演示</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 mt-auto py-8 bg-slate-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm">
+            <p>&copy; 2024 My Lab. All rights reserved.</p>
         </div>
-    </section>
-
-    <section id="contact" class="section">
-        <div class="container">
-            <h2 class="section-title">联系我</h2>
-            <div class="contact-content">
-                <p>有合作意向或技术交流？欢迎通过以下方式联系我。</p>
-                <div class="social-links">
-                    <a href="mailto:your.email@example.com"><i class="fas fa-envelope"></i></a>
-                    <a href="https://github.com/yourusername"><i class="fab fa-github"></i></a>
-                    <a href="https://linkedin.com/in/yourusername"><i class="fab fa-linkedin"></i></a>
-                    <a href="https://twitter.com/yourusername"><i class="fab fa-twitter"></i></a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <p>&copy; 2024 MyPortfolio. All Rights Reserved.</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('projects-grid');
+            const errorMsg = document.getElementById('error-message');
+
+            fetch('projects.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Clear skeleton loader
+                    grid.innerHTML = '';
+
+                    // Check if data is array and not empty
+                    if (!Array.isArray(data) || data.length === 0) {
+                        grid.innerHTML = '<p class="text-slate-400 col-span-full text-center py-8">No projects found.</p>';
+                        return;
+                    }
+
+                    // Render cards
+                    data.forEach(project => {
+                        const card = createCard(project);
+                        grid.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching projects:', error);
+                    grid.classList.add('hidden');
+                    errorMsg.classList.remove('hidden');
+                    if (window.location.protocol === 'file:') {
+                        document.getElementById('protocol-warning').classList.remove('hidden');
+                    }
+                });
+        });
+
+        function createCard(project) {
+            // Destructure with defaults
+            const { 
+                title = 'Untitled', 
+                description = 'No description available.', 
+                icon = '📦', 
+                url = '#', 
+                tags = [] 
+            } = project;
+
+            const article = document.createElement('article');
+            article.className = 'group relative bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col h-full';
+            
+            // Make the whole card clickable
+            article.onclick = (e) => {
+                // Prevent navigation if clicking on a tag (optional, but good UX if tags were links)
+                // For now, whole card goes to url
+                window.location.href = url;
+            };
+
+            const tagsHtml = tags.map(tag => 
+                `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-300 border border-slate-600 group-hover:border-slate-500 transition-colors">
+                    ${tag}
+                </span>`
+            ).join('');
+
+            article.innerHTML = `
+                <div class="flex items-start justify-between mb-4">
+                    <span class="text-4xl select-none filter grayscale group-hover:grayscale-0 transition-all duration-300 transform group-hover:scale-110 origin-left">${icon}</span>
+                    <svg class="w-5 h-5 text-slate-500 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors">${title}</h3>
+                <p class="text-slate-400 text-sm leading-relaxed mb-6 flex-grow">${description}</p>
+                <div class="flex flex-wrap gap-2 mt-auto">
+                    ${tagsHtml}
+                </div>
+            `;
+
+            return article;
+        }
+    </script>
 </body>
 </html>

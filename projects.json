@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ai-chat",
+    "title": "AI Chat Assistant",
+    "description": "A minimal chat interface powered by OpenAI API.",
+    "icon": "🤖",
+    "url": "./ai-chat/index.html",
+    "tags": ["AI", "Tool"]
+  },
+  {
+    "id": "time-converter",
+    "title": "Time Zone Converter",
+    "description": "Convert times across different time zones instantly.",
+    "icon": "⏰",
+    "url": "./time-converter/index.html",
+    "tags": ["Tool", "Utility"]
+  },
+  {
+    "id": "pomodoro",
+    "title": "Pomodoro Timer",
+    "description": "Stay focused with this simple Pomodoro technique timer.",
+    "icon": "🍅",
+    "url": "./pomodoro/index.html",
+    "tags": ["Productivity", "Vue"]
+  }
+]
