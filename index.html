@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的个人主页</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">MyPortfolio</div>
+            <ul class="nav-links">
+                <li><a href="#home">首页</a></li>
+                <li><a href="#about">关于我</a></li>
+                <li><a href="#projects">项目</a></li>
+                <li><a href="#contact">联系</a></li>
+            </ul>
+            <div class="hamburger">
+                <i class="fas fa-bars"></i>
+            </div>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>你好，我是 <span class="highlight">开发者</span></h1>
+            <p>热爱编程，探索技术无限可能</p>
+            <a href="#projects" class="btn">查看我的作品</a>
+        </div>
+    </section>
+
+    <section id="about" class="section">
+        <div class="container">
+            <h2 class="section-title">关于我</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>我是一名全栈开发工程师，热衷于构建高效、可扩展的 Web 应用。我对新技术保持敏感，喜欢在 GitHub 上探索有趣的开源项目。</p>
+                    <p>技术栈：HTML/CSS/JavaScript, React, Node.js, Python。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="section">
+        <div class="container">
+            <h2 class="section-title">我的项目</h2>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-info">
+                        <h3>个人博客系统</h3>
+                        <p>基于 React 和 Node.js 开发的个人博客平台，支持 Markdown 编辑。</p>
+                        <div class="project-links">
+                            <a href="#"><i class="fab fa-github"></i> 源码</a>
+                            <a href="#"><i class="fas fa-external-link-alt"></i> 演示</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="project-info">
+                        <h3>任务管理工具</h3>
+                        <p>一个轻量级的待办事项管理应用，使用 Vue.js 构建。</p>
+                        <div class="project-links">
+                            <a href="#"><i class="fab fa-github"></i> 源码</a>
+                            <a href="#"><i class="fas fa-external-link-alt"></i> 演示</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="project-info">
+                        <h3>数据可视化面板</h3>
+                        <p>使用 D3.js 展示复杂数据的交互式仪表盘。</p>
+                        <div class="project-links">
+                            <a href="#"><i class="fab fa-github"></i> 源码</a>
+                            <a href="#"><i class="fas fa-external-link-alt"></i> 演示</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="section">
+        <div class="container">
+            <h2 class="section-title">联系我</h2>
+            <div class="contact-content">
+                <p>有合作意向或技术交流？欢迎通过以下方式联系我。</p>
+                <div class="social-links">
+                    <a href="mailto:your.email@example.com"><i class="fas fa-envelope"></i></a>
+                    <a href="https://github.com/yourusername"><i class="fab fa-github"></i></a>
+                    <a href="https://linkedin.com/in/yourusername"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://twitter.com/yourusername"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 MyPortfolio. All Rights Reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
