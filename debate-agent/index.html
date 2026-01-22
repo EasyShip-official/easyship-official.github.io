@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debate Orchestrator - My Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+    <script>
+        // Polyfill for LangChain
+        window.process = { env: {} };
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#1e293b', 900: '#0f172a' }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .markdown-body p { margin-bottom: 0.5rem; }
+        .markdown-body p:last-child { margin-bottom: 0; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; }
+        .markdown-body ol { list-style-type: decimal; padding-left: 1.5rem; }
+        
+        .role-card { transition: all 0.3s ease; }
+        .role-judge { border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.1); }
+        .role-aff { border-left: 4px solid #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        .role-neg { border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.1); }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 min-h-screen flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur z-20 flex-none sticky top-0">
+        <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="../index.html" class="text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </a>
+                <h1 class="font-bold text-white flex items-center gap-2">
+                    <span class="text-xl">⚖️</span> Debate Orchestrator
+                </h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="export-btn" class="hidden p-2 text-indigo-400 hover:text-indigo-300 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span>JSON</span>
+                </button>
+                <div class="w-px h-6 bg-slate-700 mx-1"></div>
+                <button id="settings-btn" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-5xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6">
+        
+        <!-- Controls -->
+        <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div class="md:col-span-10">
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Debate Topic</label>
+                    <input type="text" id="topic-input" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none placeholder-slate-600" placeholder="e.g. AI will replace human programmers">
+                </div>
+                <div class="md:col-span-2 flex items-end">
+                    <button id="start-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-lg transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2">
+                        <span>🚀 Start</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debate Log -->
+        <div id="debate-container" class="space-y-6 pb-20">
+            <!-- Dynamic Content Here -->
+            <div class="text-center text-slate-500 mt-10" id="empty-state">
+                <p>Enter a topic above to begin the simulation.</p>
+                <p class="text-xs mt-2 opacity-50">Powered by SimpleLLM & Parallel Execution</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl w-full max-w-md border border-slate-700 shadow-2xl transform transition-all scale-95 opacity-0" id="modal-content">
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-white mb-4">API Configuration</h2>
+                <form id="settings-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">Base URL</label>
+                        <input type="text" id="api-url" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" value="https://api.openai.com/v1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">API Key</label>
+                        <input type="password" id="api-key" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">Model Name</label>
+                        <input type="text" id="api-model" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" value="gpt-3.5-turbo">
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" id="close-settings" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script type="module">
+        // --- Custom Lightweight LLM Client (Streaming Support) ---
+        class SimpleLLM {
+            constructor(config) {
+                this.config = config;
+            }
+
+            async invokeStream(messages, onChunk) {
+                const formattedMessages = messages.map(m => {
+                    const role = m.role || (m.constructor.name === 'SystemMessage' ? 'system' : 'user');
+                    const content = m.content;
+                    return { role, content };
+                });
+
+                try {
+                    const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${this.config.apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: this.config.model,
+                            messages: formattedMessages,
+                            temperature: 0.7,
+                            stream: true
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const err = await response.json().catch(() => ({}));
+                        throw new Error(err.error?.message || `API Error: ${response.status}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+                    let fullContent = "";
+                    let buffer = "";
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); // Keep the last partial line in the buffer
+                        
+                        for (const line of lines) {
+                            const trimmed = line.trim();
+                            if (!trimmed) continue;
+                            if (trimmed.startsWith('data: ')) {
+                                const data = trimmed.slice(6);
+                                if (data === '[DONE]') break;
+                                
+                                try {
+                                    const json = JSON.parse(data);
+                                    const content = json.choices[0]?.delta?.content || "";
+                                    if (content) {
+                                        fullContent += content;
+                                        onChunk(content, fullContent);
+                                    }
+                                } catch (e) {
+                                    console.error("Error parsing stream line:", line, e);
+                                }
+                            }
+                        }
+                    }
+                    return fullContent;
+                } catch (error) {
+                    console.error("LLM Invoke Error:", error);
+                    throw error;
+                }
+            }
+
+            // Keep non-streaming invoke for backward compatibility if needed, 
+            // though we'll use streaming for everything now.
+            async invoke(messages) {
+                return this.invokeStream(messages, () => {});
+            }
+        }
+
+        // --- DOM Elements ---
+        const startBtn = document.getElementById('start-btn');
+        const topicInput = document.getElementById('topic-input');
+        const debateContainer = document.getElementById('debate-container');
+        const emptyState = document.getElementById('empty-state');
+        const exportBtn = document.getElementById('export-btn');
+        
+        // Settings
+        const settingsModal = document.getElementById('settings-modal');
+        const modalContent = document.getElementById('modal-content');
+        const settingsBtn = document.getElementById('settings-btn');
+        const closeSettingsBtn = document.getElementById('close-settings');
+        const settingsForm = document.getElementById('settings-form');
+        const apiUrlInput = document.getElementById('api-url');
+        const apiKeyInput = document.getElementById('api-key');
+        const apiModelInput = document.getElementById('api-model');
+
+        // --- Configuration Management ---
+        let config = {
+            baseUrl: 'https://api.openai.com/v1',
+            apiKey: '',
+            model: 'gpt-3.5-turbo'
+        };
+
+        // --- Debate History Tracking ---
+        let debateHistory = [];
+
+        function loadConfig() {
+            const saved = localStorage.getItem('debate_agent_config');
+            if (saved) {
+                config = JSON.parse(saved);
+                apiUrlInput.value = config.baseUrl;
+                apiKeyInput.value = config.apiKey;
+                apiModelInput.value = config.model;
+            } else {
+                openModal();
+            }
+        }
+
+        // --- Modal Functions ---
+        function openModal() {
+            settingsModal.classList.remove('hidden');
+            void settingsModal.offsetWidth;
+            modalContent.classList.remove('scale-95', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }
+
+        function closeModal() {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => settingsModal.classList.add('hidden'), 200);
+        }
+
+        settingsBtn.addEventListener('click', openModal);
+        closeSettingsBtn.addEventListener('click', closeModal);
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) closeModal();
+        });
+        
+        settingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            config = {
+                baseUrl: apiUrlInput.value.replace(/\/$/, ''),
+                apiKey: apiKeyInput.value.trim(),
+                model: apiModelInput.value.trim()
+            };
+            localStorage.setItem('debate_agent_config', JSON.stringify(config));
+            closeModal();
+        });
+
+        // --- Export Functionality ---
+        exportBtn.addEventListener('click', () => {
+            if (debateHistory.length === 0) return;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(debateHistory, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `debate_history_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        });
+
+        // --- UI Rendering ---
+        function clearDebate() {
+            debateContainer.innerHTML = '';
+            emptyState.style.display = 'none';
+            debateHistory = [];
+            exportBtn.classList.add('hidden');
+        }
+
+        function createSectionHeader(title) {
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-4 py-4';
+            div.innerHTML = `
+                <div class="h-px bg-slate-700 flex-1"></div>
+                <span class="text-slate-400 text-sm font-bold uppercase tracking-wider">${title}</span>
+                <div class="h-px bg-slate-700 flex-1"></div>
+            `;
+            debateContainer.appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function createMessageCard(role, title, content, isLoading = false) {
+            const div = document.createElement('div');
+            const roleClass = role === 'judge' ? 'role-judge' : role === 'affirmative' ? 'role-aff' : 'role-neg';
+            const icon = role === 'judge' ? '🧑‍⚖️' : role === 'affirmative' ? '🔵' : '🔴';
+            
+            div.className = `bg-slate-800 rounded-xl p-5 border border-slate-700/50 role-card ${roleClass} mb-4 opacity-0 transform translate-y-4 transition-all duration-500`;
+            div.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="text-2xl mt-1">${icon}</div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-slate-200 mb-2">${title}</h3>
+                        <div class="text-slate-300 text-sm leading-relaxed markdown-body">
+                            ${isLoading ? '<div class="animate-pulse flex space-x-2 loading-dots"><div class="h-2 w-2 bg-slate-500 rounded-full"></div><div class="h-2 w-2 bg-slate-500 rounded-full"></div><div class="h-2 w-2 bg-slate-500 rounded-full"></div></div>' : marked.parse(content)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            debateContainer.appendChild(div);
+            
+            requestAnimationFrame(() => {
+                div.classList.remove('opacity-0', 'translate-y-4');
+            });
+
+            div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            return div;
+        }
+
+        function updateMessageContent(div, content) {
+            const contentArea = div.querySelector('.markdown-body');
+            contentArea.innerHTML = marked.parse(content);
+        }
+
+        // --- Debate Logic ---
+        
+        async function getLLM() {
+            if (!config.apiKey) {
+                openModal();
+                throw new Error("API Key required. Please check your settings.");
+            }
+            return new SimpleLLM(config);
+        }
+
+        const JUDGE_DECISION_REGEX = /-{3,}\s*JUDGE_DECISION\s*-{3,}/i;
+
+        async function generateResponseStream(roleSystemPrompt, userPrompt, uiCard, roleName, roundInfo, transformDisplay = null) {
+            const llm = await getLLM();
+            
+            // Remove loading indicator on first chunk
+            let hasStarted = false;
+            
+            const responseContent = await llm.invokeStream([
+                { role: 'system', content: roleSystemPrompt },
+                { role: 'user', content: userPrompt }
+            ], (chunk, fullText) => {
+                if (!hasStarted) {
+                    hasStarted = true;
+                }
+                const textToDisplay = transformDisplay ? transformDisplay(fullText) : fullText;
+                updateMessageContent(uiCard, textToDisplay);
+            });
+
+            // Add to history (Apply transformation if exists to keep history clean)
+            const contentToStore = transformDisplay ? transformDisplay(responseContent) : responseContent;
+            
+            debateHistory.push({
+                role: roleName,
+                round: roundInfo,
+                content: contentToStore,
+                timestamp: new Date().toISOString()
+            });
+
+            return responseContent;
+        }
+        
+        function parseJudgeOutput(text) {
+            let status = "CONTINUE";
+            let guidance = text;
+
+            // 1. Try to find JSON block
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                try {
+                    const json = JSON.parse(jsonMatch[0]);
+                    if (json.status) status = json.status;
+                    // If JSON has guidance, use it. Otherwise rely on text split.
+                    if (json.guidance) guidance = json.guidance; 
+                } catch (e) {
+                    console.warn("Failed to parse JSON from judge:", e);
+                }
+            }
+
+            // 2. Handle Split Format (Text --- JSON)
+            // If the text contains the separator, we prefer the text part as guidance
+            const parts = text.split(JUDGE_DECISION_REGEX);
+            if (parts.length > 1) {
+                guidance = parts[0].trim();
+            }
+
+            // 3. Fallback for "CONCLUDE" keyword if JSON failed
+            if (!jsonMatch && text.toUpperCase().includes("CONCLUDE")) {
+                status = "CONCLUDE";
+            }
+
+            return { status, guidance };
+        }
+
+        const PROMPTS = {
+            judge: `You are an impartial, analytical, and fair Debate Judge. 
+Your goal is to oversee the debate, ensure logical consistency, and provide the final verdict based solely on the arguments presented.
+
+**CRITICAL INSTRUCTIONS:**
+1. **LANGUAGE:** You MUST output your analysis and verdict in the **SAME LANGUAGE** as the debate topic.
+2. **NO HALLUCINATIONS:** Do NOT output any text unrelated to the debate (e.g., code snippets, READMEs, file contents, or unrelated documents).
+3. **FORMAT:** Follow the requested output format EXACTLY.
+4. **CONTENT:** Focus ONLY on the arguments presented in the history.`,
+
+            affirmative: `You are the Affirmative (Positive) side in a formal debate. You strongly support the given motion.
+
+**CRITICAL INSTRUCTIONS:**
+1. **LANGUAGE:** You MUST respond in the **SAME LANGUAGE** as the debate topic.
+2. **DIRECT RESPONSE:** Start your response DIRECTLY with your argument. Do NOT use introductions like "Here is my argument" or "As the affirmative side".
+3. **NO UNRELATED TEXT:** Do NOT output any text unrelated to the debate (e.g., code, READMEs, unrelated documents).
+4. **STYLE:** Use Markdown (bolding, bullet points). Max 400 words. Be concise and impactful.`,
+
+            negative: `You are the Negative (Opposing) side in a formal debate. You strongly oppose the given motion.
+
+**CRITICAL INSTRUCTIONS:**
+1. **LANGUAGE:** You MUST respond in the **SAME LANGUAGE** as the debate topic.
+2. **DIRECT RESPONSE:** Start your response DIRECTLY with your argument. Do NOT use introductions like "Here is my argument" or "As the negative side".
+3. **NO UNRELATED TEXT:** Do NOT output any text unrelated to the debate (e.g., code, READMEs, unrelated documents).
+4. **STYLE:** Use Markdown (bolding, bullet points). Max 400 words. Be concise and impactful.`
+        };
+
+        async function runDebate() {
+            const topic = topicInput.value.trim();
+            
+            if (!topic) {
+                alert("Please enter a debate topic.");
+                return;
+            }
+
+            try {
+                await getLLM(); 
+                
+                startBtn.disabled = true;
+                startBtn.innerHTML = `<span class="animate-spin">⏳</span> Running...`;
+                clearDebate();
+
+                let affHistory = "";
+                let negHistory = "";
+                let lastAffArgs = "";
+                let lastNegArgs = "";
+
+                // --- Phase 1: Blind Opening ---
+                createSectionHeader("Phase 1: Initialization & Blind Opening");
+
+                // 1. Judge Init
+                const judgeCard = createMessageCard('judge', 'Judge Initialization', '', true);
+                const judgeInitPrompt = `The debate topic is: "${topic}". 
+Briefly set the stage, define the core conflict, and announce the start.
+**Constraint:** Output in the SAME LANGUAGE as the topic. Do not output unrelated text.`;
+                
+                const judgeInitRes = await generateResponseStream(
+                    PROMPTS.judge, 
+                    judgeInitPrompt, 
+                    judgeCard, 
+                    'Judge', 
+                    'Initialization'
+                );
+
+                // 2. Parallel Opening
+                const affCard = createMessageCard('affirmative', 'Affirmative Opening', '', true);
+                const negCard = createMessageCard('negative', 'Negative Opening', '', true);
+
+                const commonOpeningPrompt = `Topic: "${topic}". 
+Present your core opening arguments (Constructive Speech). You do not know the opponent's specific arguments yet.
+**Constraint:** Output in the SAME LANGUAGE as the topic. Reply ONLY with the argument content.`;
+
+                const [affOpen, negOpen] = await Promise.all([
+                    generateResponseStream(
+                        PROMPTS.affirmative, 
+                        commonOpeningPrompt,
+                        affCard,
+                        'Affirmative',
+                        'Opening'
+                    ),
+                    generateResponseStream(
+                        PROMPTS.negative, 
+                        commonOpeningPrompt,
+                        negCard,
+                        'Negative',
+                        'Opening'
+                    )
+                ]);
+
+                lastAffArgs = affOpen;
+                lastNegArgs = negOpen;
+                affHistory += `Round 0 (Opening): ${affOpen}\n`;
+                negHistory += `Round 0 (Opening): ${negOpen}\n`;
+
+                // --- Phase 2: Cross-Fire Loop (Judge Controlled) ---
+                let roundCount = 1;
+                const MAX_ROUNDS = 10;
+                let isDebateActive = true;
+
+                while (isDebateActive && roundCount <= MAX_ROUNDS) {
+                    createSectionHeader(`Phase 2: Round ${roundCount}`);
+
+                    // 1. Judge Intervention
+                    const judgeRoundCard = createMessageCard('judge', `Judge Guidance (Round ${roundCount})`, '', true);
+                    const judgePrompt = `
+Topic: "${topic}"
+Round ${roundCount-1} Affirmative: ${lastAffArgs}
+Round ${roundCount-1} Negative: ${lastNegArgs}
+
+**Task:** Analyze the current state of the debate.
+- If arguments are exhausted, repetitive, or a winner is clear -> Signal **CONCLUDE**.
+- Otherwise -> Signal **CONTINUE** and provide brief guidance.
+
+**Output Format (Strictly Follow):**
+1. Your Guidance/Analysis (in the SAME LANGUAGE as the Topic).
+2. A new line with EXACTLY: "---JUDGE_DECISION---"
+3. A JSON object: {"status": "CONTINUE" or "CONCLUDE"}
+
+**CRITICAL:** Do NOT output anything after the JSON.
+`;
+                    
+                    const judgeRawRes = await generateResponseStream(
+                        PROMPTS.judge, 
+                        judgePrompt, 
+                        judgeRoundCard,
+                        'Judge',
+                        `Round ${roundCount} Guidance`,
+                        (fullText) => {
+                            // Hide everything after the decision separator
+                            return fullText.split(JUDGE_DECISION_REGEX)[0];
+                        }
+                    );
+                    
+                    const judgeDecision = parseJudgeOutput(judgeRawRes);
+                    
+                    // Ensure the final content matches the parsed guidance (clean up any residual separator)
+                    updateMessageContent(judgeRoundCard, judgeDecision.guidance);
+                    
+                    if (judgeDecision.status === "CONCLUDE") {
+                        createSectionHeader("🏆 Verdict Reached");
+                        const verdictCard = createMessageCard('judge', 'Final Verdict', '', true);
+                        await generateResponseStream(
+                            PROMPTS.judge,
+                            `The debate is concluded. Based on the entire exchange:\nTopic: ${topic}\nHistory:\n${affHistory}\n${negHistory}\n\n**Task:** Declare the winner and provide a comprehensive reason.\n**Constraint:** Output in the SAME LANGUAGE as the topic.`,
+                            verdictCard,
+                            'Judge',
+                            'Final Verdict'
+                        );
+                        isDebateActive = false;
+                        break; 
+                    }
+
+                    // 2. Parallel Rebuttal
+                    const affRebuttalCard = createMessageCard('affirmative', `Affirmative Rebuttal (Round ${roundCount})`, '', true);
+                    const negRebuttalCard = createMessageCard('negative', `Negative Rebuttal (Round ${roundCount})`, '', true);
+
+                    const commonRebuttalPrompt = (opponentArgs, guidance) => `Topic: "${topic}"
+Opponent's arguments:
+${opponentArgs}
+
+Judge's Guidance:
+"${guidance}"
+
+**Task:** Refute the opponent's points and strengthen your case.
+**Constraints:** 
+1. Output in the SAME LANGUAGE as the topic.
+2. Reply ONLY with the argument.
+3. Do NOT include unrelated text.`;
+
+                    const [affRes, negRes] = await Promise.all([
+                        generateResponseStream(
+                            PROMPTS.affirmative,
+                            commonRebuttalPrompt(lastNegArgs, judgeDecision.guidance),
+                            affRebuttalCard,
+                            'Affirmative',
+                            `Round ${roundCount}`
+                        ),
+                        generateResponseStream(
+                            PROMPTS.negative,
+                            commonRebuttalPrompt(lastAffArgs, judgeDecision.guidance),
+                            negRebuttalCard,
+                            'Negative',
+                            `Round ${roundCount}`
+                        )
+                    ]);
+
+                    lastAffArgs = affRes;
+                    lastNegArgs = negRes;
+                    affHistory += `Round ${roundCount}: ${affRes}\n`;
+                    negHistory += `Round ${roundCount}: ${negRes}\n`;
+
+                    roundCount++;
+                }
+
+                // Show Export Button
+                exportBtn.classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                alert("Error: " + error.message);
+            } finally {
+                startBtn.disabled = false;
+                startBtn.innerHTML = `<span>🚀 Start</span>`;
+            }
+        }
+
+        // Initialize
+        loadConfig();
+        startBtn.addEventListener('click', runDebate);
+
+    </script>
+</body>
+</html>

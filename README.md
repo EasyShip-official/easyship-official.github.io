@@ -17,6 +17,11 @@
   - 支持 Markdown 渲染、代码高亮、流式响应。
   - **BYOK (Bring Your Own Key)**: 用户自行填入 API Key。
 
+- **Debate Orchestrator (Multi-Agent)**:
+  - 基于 LangChain.js 实现的多智能体辩论系统。
+  - 模拟【裁判】、【正方】、【反方】三个角色的并行思考与交锋。
+  - 实现“双盲立论”与“并行交叉攻辩”逻辑。
+
 ## 🛠️ 快速开始
 
 ### 1. 本地运行

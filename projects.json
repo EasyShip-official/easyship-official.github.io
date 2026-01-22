@@ -8,6 +8,14 @@
     "tags": ["AI", "Tool"]
   },
   {
+    "id": "debate-agent",
+    "title": "Debate Orchestrator",
+    "description": "Multi-Agent debate simulation with parallel execution logic.",
+    "icon": "⚖️",
+    "url": "./debate-agent/index.html",
+    "tags": ["AI", "Agent", "Simulation"]
+  },
+  {
     "id": "time-converter",
     "title": "Time Zone Converter",
     "description": "Convert times across different time zones instantly.",
