@@ -4,7 +4,8 @@
     "title": "AI Chat Assistant",
     "description": "A minimal chat interface powered by OpenAI API.",
     "icon": "🤖",
-    "url": "./ai-chat/index.html",
+    "url": "./projects/ai-tools/ai-chat/index.html",
+    "category": "ai-tools",
     "tags": ["AI", "Tool"]
   },
   {
@@ -12,7 +13,8 @@
     "title": "Debate Orchestrator",
     "description": "Multi-Agent debate simulation with parallel execution logic.",
     "icon": "⚖️",
-    "url": "./debate-agent/index.html",
+    "url": "./projects/ai-tools/debate-agent/index.html",
+    "category": "ai-tools",
     "tags": ["AI", "Agent", "Simulation"]
   },
   {
@@ -20,7 +22,8 @@
     "title": "Time Zone Converter",
     "description": "Convert times across different time zones instantly.",
     "icon": "⏰",
-    "url": "./time-converter/index.html",
+    "url": "./projects/productivity/time-converter/index.html",
+    "category": "productivity",
     "tags": ["Tool", "Utility"]
   },
   {
@@ -28,7 +31,8 @@
     "title": "Pomodoro Timer",
     "description": "Stay focused with this simple Pomodoro technique timer.",
     "icon": "🍅",
-    "url": "./pomodoro/index.html",
+    "url": "./projects/productivity/pomodoro/index.html",
+    "category": "productivity",
     "tags": ["Productivity", "Vue"]
   },
   {
@@ -36,7 +40,8 @@
     "title": "The Lucidity Clock",
     "description": "Digital wellness dashboard for emotional detachment and salary visualization.",
     "icon": "👁️",
-    "url": "./lucidity-clock/index.html",
+    "url": "./projects/experimental/lucidity-clock/index.html",
+    "category": "experimental",
     "tags": ["Wellness", "Cyberpunk", "Vue"]
   }
 ]

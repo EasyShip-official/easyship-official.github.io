@@ -111,7 +111,7 @@
             const grid = document.getElementById('projects-grid');
             const errorMsg = document.getElementById('error-message');
 
-            fetch('projects.json')
+            fetch('data/projects.json')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
