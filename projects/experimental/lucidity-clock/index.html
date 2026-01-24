@@ -148,10 +148,109 @@
                 opacity: 0;
             }
         }
+
+        /* Festival Mode Styles */
+        .festival-mode {
+            position: relative;
+        }
+
+        .festival-mode::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(255, 0, 0, 0.03) 50%, transparent 70%);
+            animation: festival-pulse 3s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes festival-pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* Lantern decorations for Chinese New Year */
+        .lantern {
+            position: absolute;
+            width: 40px;
+            height: 50px;
+            background: radial-gradient(ellipse at center, #ff4444 0%, #cc0000 100%);
+            border-radius: 50% 50% 40% 40%;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.6), inset 0 0 10px rgba(255, 200, 0, 0.3);
+            animation: sway 3s ease-in-out infinite;
+        }
+
+        .lantern::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 8px;
+            background: #ffd700;
+            border-radius: 3px;
+        }
+
+        .lantern::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 15px;
+            background: linear-gradient(to bottom, #ffd700, #ff8c00);
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+
+        /* Confetti for general celebration */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+            animation: confetti-fall 4s ease-in-out infinite;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Sparkle for National Day */
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ffd700;
+            border-radius: 50%;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Weekend relax mode */
+        .weekend-mode .money-ticker {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+        }
     </style>
 </head>
 <body class="h-screen w-screen scanline relative">
-    <div id="app" v-cloak class="h-full w-full flex flex-col p-6 relative z-10 max-w-7xl mx-auto">
+    <div id="app" v-cloak :class="['h-full w-full flex flex-col p-6 relative z-10 max-w-7xl mx-auto', festivalClass]">
         
         <!-- Header / Status Bar -->
         <header class="flex justify-between items-center mb-8 border-b border-cyber-gray pb-4">
@@ -162,7 +261,10 @@
                     </svg>
                 </a>
                 <h1 class="text-xl font-bold tracking-wider text-cyber-text uppercase">
-                    Lucidity Clock <span class="text-xs text-cyber-dim ml-2">v1.0.0 // STATUS: DETACHED</span>
+                    Lucidity Clock
+                    <span class="text-xs text-cyber-dim ml-2">
+                        v1.0.0 // STATUS: {{ isNonWorkDay ? festivalInfo.name : 'DETACHED' }}
+                    </span>
                 </h1>
             </div>
             <button @click="showSettings = true" class="text-cyber-dim hover:text-cyber-text transition-colors">
@@ -177,7 +279,9 @@
         <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 content-center">
             
             <!-- Centerpiece: Money Ticker -->
-            <div ref="moneyContainer" class="lg:col-span-8 flex flex-col justify-center items-center bg-cyber-dark border border-cyber-gray p-8 rounded-lg relative overflow-hidden group">
+            <div ref="moneyContainer" class="lg:col-span-8 flex flex-col justify-center items-center bg-cyber-dark border border-cyber-gray p-8 rounded-lg relative overflow-hidden group money-ticker">
+                <!-- Festival decorations container -->
+                <div ref="decorationsContainer" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
                 <div class="absolute top-0 left-0 w-full h-1 bg-cyber-green opacity-50"></div>
                 <div class="absolute inset-0 bg-cyber-greenDim opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
                 
@@ -314,6 +418,35 @@
             "保护你的光芒，不为暗夜燃烧。"
         ];
 
+        // Festival configurations
+        const FESTIVALS = {
+            weekend: {
+                name: 'WEEKEND CHILL',
+                class: 'weekend-mode',
+                type: 'confetti'
+            },
+            newYear: {
+                name: '🎊 NEW YEAR',
+                class: 'festival-mode',
+                type: 'confetti'
+            },
+            springFestival: {
+                name: '🏮 SPRING FESTIVAL',
+                class: 'festival-mode',
+                type: 'lantern'
+            },
+            nationalDay: {
+                name: '🎆 NATIONAL DAY',
+                class: 'festival-mode',
+                type: 'sparkle'
+            },
+            christmas: {
+                name: '🎄 CHRISTMAS',
+                class: 'festival-mode',
+                type: 'confetti'
+            }
+        };
+
         createApp({
             setup() {
                 // State
@@ -334,6 +467,9 @@
                 const isConfigured = ref(false);
                 const isLoadingHolidays = ref(false);
                 const moneyContainer = ref(null);
+                const decorationsContainer = ref(null);
+                const isNonWorkDay = ref(false);
+                const festivalInfo = ref({ name: '', class: '', type: '' });
 
                 // Timers
                 let moneyInterval = null;
@@ -390,13 +526,17 @@
                 const timeLeft = computed(() => {
                     const { end } = todayWorkTimes.value;
                     const diff = end - now.value;
-                    
+
                     if (diff <= 0) return { isOver: true, hours: 0, minutes: 0 };
-                    
+
                     const hours = Math.floor(diff / (1000 * 60 * 60));
                     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    
+
                     return { isOver: false, hours, minutes };
+                });
+
+                const festivalClass = computed(() => {
+                    return isNonWorkDay.value ? festivalInfo.value.class : '';
                 });
 
                 // Methods
@@ -564,11 +704,142 @@
                     showSOS.value = true;
                 };
 
+                // Festival detection methods
+                const checkFestival = () => {
+                    const date = now.value;
+                    const month = date.getMonth() + 1;
+                    const day = date.getDate();
+                    const dayOfWeek = date.getDay();
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
+                    // Check specific festivals
+                    if (month === 1 && day === 1) {
+                        setFestival('newYear');
+                    } else if (month === 2 || month === 1) {
+                        // Spring Festival (roughly Jan-Feb, exact dates would need API)
+                        const springFestivalStart = getSpringFestivalDate(date.getFullYear());
+                        if (isWithinSpringFestival(date, springFestivalStart)) {
+                            setFestival('springFestival');
+                        } else if (isWeekend) {
+                            setFestival('weekend');
+                        } else {
+                            clearFestival();
+                        }
+                    } else if (month === 10 && day >= 1 && day <= 7) {
+                        setFestival('nationalDay');
+                    } else if (month === 12 && day === 25) {
+                        setFestival('christmas');
+                    } else if (isWeekend) {
+                        setFestival('weekend');
+                    } else {
+                        clearFestival();
+                    }
+                };
+
+                const getSpringFestivalDate = (year) => {
+                    // Approximate Spring Festival dates (Chinese New Year)
+                    // In production, this should use a proper lunar calendar API
+                    const springFestivalDates = {
+                        2024: { month: 2, day: 10 },
+                        2025: { month: 1, day: 29 },
+                        2026: { month: 2, day: 17 },
+                        2027: { month: 2, day: 6 }
+                    };
+                    return springFestivalDates[year] || { month: 2, day: 10 };
+                };
+
+                const isWithinSpringFestival = (date, sfDate) => {
+                    const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                    const startDate = new Date(date.getFullYear(), sfDate.month - 1, sfDate.day);
+                    const endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+                    return checkDate >= startDate && checkDate <= endDate;
+                };
+
+                const setFestival = (festivalKey) => {
+                    const festival = FESTIVALS[festivalKey];
+                    if (festival) {
+                        isNonWorkDay.value = true;
+                        festivalInfo.value = festival;
+                        createFestivalDecorations(festival.type);
+                    }
+                };
+
+                const clearFestival = () => {
+                    isNonWorkDay.value = false;
+                    festivalInfo.value = { name: '', class: '', type: '' };
+                    clearDecorations();
+                };
+
+                const createFestivalDecorations = (type) => {
+                    if (!decorationsContainer.value) return;
+
+                    clearDecorations();
+
+                    if (type === 'lantern') {
+                        createLanterns();
+                    } else if (type === 'confetti') {
+                        createConfetti();
+                    } else if (type === 'sparkle') {
+                        createSparkles();
+                    }
+                };
+
+                const createLanterns = () => {
+                    if (!decorationsContainer.value) return;
+                    const container = decorationsContainer.value;
+
+                    for (let i = 0; i < 6; i++) {
+                        const lantern = document.createElement('div');
+                        lantern.className = 'lantern';
+                        lantern.style.left = `${10 + i * 16}%`;
+                        lantern.style.top = '10px';
+                        lantern.style.animationDelay = `${i * 0.5}s`;
+                        container.appendChild(lantern);
+                    }
+                };
+
+                const createConfetti = () => {
+                    if (!decorationsContainer.value) return;
+                    const container = decorationsContainer.value;
+
+                    for (let i = 0; i < 30; i++) {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti';
+                        confetti.style.left = `${Math.random() * 100}%`;
+                        confetti.style.animationDelay = `${Math.random() * 4}s`;
+                        confetti.style.animationDuration = `${3 + Math.random() * 2}s`;
+
+                        const colors = ['#ff4444', '#ffd700', '#00ff41', '#4488ff', '#ff88ff'];
+                        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        container.appendChild(confetti);
+                    }
+                };
+
+                const createSparkles = () => {
+                    if (!decorationsContainer.value) return;
+                    const container = decorationsContainer.value;
+
+                    for (let i = 0; i < 50; i++) {
+                        const sparkle = document.createElement('div');
+                        sparkle.className = 'sparkle';
+                        sparkle.style.left = `${Math.random() * 100}%`;
+                        sparkle.style.top = `${Math.random() * 100}%`;
+                        sparkle.style.animationDelay = `${Math.random() * 2}s`;
+                        container.appendChild(sparkle);
+                    }
+                };
+
+                const clearDecorations = () => {
+                    if (!decorationsContainer.value) return;
+                    decorationsContainer.value.innerHTML = '';
+                };
+
                 // Lifecycle
                 onMounted(() => {
                     loadSettings();
                     rotateMantra();
-                    
+                    checkFestival();
+
                     // Try to fetch holidays if not explicitly set or just always update on load to keep fresh
                     // But maybe only if settings are open or on initial load?
                     // Let's fetch on mount to ensure we have latest data for the month
@@ -576,9 +847,12 @@
 
                     // Update money frequently for the ticker effect
                     moneyInterval = setInterval(updateMoney, 50); // 20fps is enough for text
-                    
+
                     // Rotate mantra every 5 mins
                     mantraInterval = setInterval(rotateMantra, 5 * 60 * 1000);
+
+                    // Check festival every minute (in case day changes)
+                    setInterval(checkFestival, 60 * 1000);
                 });
 
                 onUnmounted(() => {
@@ -600,7 +874,11 @@
                     rotateMantra,
                     triggerSOS,
                     isConfigured,
-                    moneyContainer
+                    moneyContainer,
+                    decorationsContainer,
+                    isNonWorkDay,
+                    festivalInfo,
+                    festivalClass
                 };
             }
         }).mount('#app');
