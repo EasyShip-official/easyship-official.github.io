@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 配置组件演示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 min-h-screen text-slate-100">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- 标题 -->
+        <header class="mb-8">
+            <a href="../../../index.html" class="inline-flex items-center text-slate-400 hover:text-white mb-4 transition-colors">
+                <span class="mr-2">←</span> 返回主页
+            </a>
+            <h1 class="text-3xl font-bold mb-2">API 配置组件演示</h1>
+            <p class="text-slate-400">展示通用 API 配置组件的使用方法</p>
+        </header>
+
+        <!-- 控制面板 -->
+        <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 mb-6">
+            <h2 class="text-xl font-semibold mb-4">操作面板</h2>
+            <div class="flex flex-wrap gap-4">
+                <button id="open-config-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
+                    ⚙️ 打开配置
+                </button>
+                <button id="show-config-btn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
+                    显示当前配置
+                </button>
+                <button id="test-api-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
+                    测试 API 连接
+                </button>
+            </div>
+        </div>
+
+        <!-- 配置显示区域 -->
+        <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+            <h2 class="text-xl font-semibold mb-4">当前配置</h2>
+            <pre id="config-display" class="bg-slate-900 rounded-lg p-4 text-sm overflow-auto max-h-64 text-slate-300">
+尚未配置或配置为空
+            </pre>
+        </div>
+
+        <!-- API 测试结果 -->
+        <div id="test-result" class="hidden mt-6 bg-slate-800 rounded-2xl p-6 border border-slate-700">
+            <h2 class="text-xl font-semibold mb-4">API 测试结果</h2>
+            <div id="test-content" class="bg-slate-900 rounded-lg p-4 text-sm overflow-auto max-h-64"></div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 mt-6">
+            <h2 class="text-xl font-semibold mb-4">使用说明</h2>
+            <div class="space-y-4 text-slate-300">
+                <div>
+                    <h3 class="font-semibold text-white mb-2">1. 引入组件</h3>
+                    <pre class="bg-slate-900 rounded-lg p-3 text-sm overflow-x-auto">&lt;!-- 引入 JavaScript --&gt;
+&lt;script src="../../../shared/api-config.js"&gt;&lt;/script&gt;
+
+&lt;!-- 复制 shared/api-config.html 中的模态框 HTML 到 body --&gt;</pre>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white mb-2">2. 初始化配置</h3>
+                    <pre class="bg-slate-900 rounded-lg p-3 text-sm overflow-x-auto">initApiConfig('my_app_config', {
+    baseUrl: 'https://api.openai.com/v1',
+    apiKey: '',
+    model: 'gpt-3.5-turbo'
+}, (newConfig) => {
+    console.log('配置已更新:', newConfig);
+});</pre>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white mb-2">3. 获取配置</h3>
+                    <pre class="bg-slate-900 rounded-lg p-3 text-sm overflow-x-auto">const config = getConfig();
+console.log(config.baseUrl, config.model);</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入通用 API 配置组件 JS -->
+    <script src="../../../shared/api-config.js"></script>
+
+    <!-- API 配置模态框 (从 shared/api-config.html 复制) -->
+    <div id="api-config-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl w-full max-w-lg border border-slate-700 shadow-2xl transform transition-all scale-95 opacity-0" id="api-modal-content">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-white">API 配置</h2>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="mode-form-btn" class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors bg-indigo-600 text-white">表单</button>
+                        <button type="button" id="mode-json-btn" class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors bg-slate-700 text-slate-300 hover:bg-slate-600">JSON</button>
+                    </div>
+                </div>
+                <form id="api-config-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">Base URL</label>
+                        <input type="text" id="api-url" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-sm" value="https://api.openai.com/v1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">API Key</label>
+                        <input type="password" id="api-key" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">模型名称</label>
+                        <input type="text" id="api-model" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-sm" value="gpt-3.5-turbo">
+                    </div>
+                    <div id="api-error" class="hidden bg-red-900/30 border border-red-700 rounded-lg px-3 py-2 text-red-300 text-sm"></div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" id="close-api-config" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">取消</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">保存</button>
+                    </div>
+                </form>
+                <div id="api-config-json" class="hidden">
+                    <div class="mb-2 text-sm text-slate-400">直接编辑 JSON 配置，支持扩展字段</div>
+                    <textarea id="api-json-textarea" class="w-full h-48 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-sm resize-none" spellcheck="false"></textarea>
+                    <div id="api-json-error" class="hidden mt-2 bg-red-900/30 border border-red-700 rounded-lg px-3 py-2 text-red-300 text-sm"></div>
+                    <div class="flex justify-between items-center mt-4">
+                        <button type="button" id="format-json-btn" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">格式化 JSON</button>
+                        <div class="flex gap-3">
+                            <button type="button" id="close-api-config-json" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">取消</button>
+                            <button type="button" id="save-json-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化 API 配置
+        initApiConfig('api_config_demo', {
+            baseUrl: 'https://api.openai.com/v1',
+            apiKey: '',
+            model: 'gpt-3.5-turbo'
+        }, (newConfig) => {
+            console.log('配置已更新:', newConfig);
+            updateConfigDisplay();
+        });
+
+        // DOM 元素
+        const openConfigBtn = document.getElementById('open-config-btn');
+        const showConfigBtn = document.getElementById('show-config-btn');
+        const testApiBtn = document.getElementById('test-api-btn');
+        const configDisplay = document.getElementById('config-display');
+        const testResult = document.getElementById('test-result');
+        const testContent = document.getElementById('test-content');
+
+        // 更新配置显示
+        function updateConfigDisplay() {
+            const config = getConfig();
+
+            // 隐藏敏感信息
+            const displayConfig = {
+                ...config,
+                apiKey: config.apiKey ? `${config.apiKey.slice(0, 8)}...` : '(未设置)'
+            };
+
+            configDisplay.textContent = JSON.stringify(displayConfig, null, 2);
+        }
+
+        // 显示当前配置
+        showConfigBtn.addEventListener('click', () => {
+            updateConfigDisplay();
+        });
+
+        // 打开配置框
+        openConfigBtn.addEventListener('click', () => {
+            openConfigModal();
+        });
+
+        // 测试 API 连接
+        testApiBtn.addEventListener('click', async () => {
+            const config = getConfig();
+
+            if (!config.apiKey) {
+                testResult.classList.remove('hidden');
+                testContent.innerHTML = '<div class="text-yellow-400">⚠️ 请先配置 API Key</div>';
+                return;
+            }
+
+            testResult.classList.remove('hidden');
+            testContent.innerHTML = '<div class="text-slate-400">正在测试连接...</div>';
+
+            try {
+                const response = await fetch(`${config.baseUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${config.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: [{ role: 'user', content: 'Hello, this is a test message.' }],
+                        max_tokens: 10
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    testContent.innerHTML = `
+                        <div class="text-green-400 mb-2">✅ 连接成功！</div>
+                        <div class="text-slate-300 text-xs">
+                            <div>模型: ${data.model}</div>
+                            <div>响应: ${data.choices[0].message.content}</div>
+                        </div>
+                    `;
+                } else {
+                    const error = await response.json();
+                    testContent.innerHTML = `
+                        <div class="text-red-400">❌ 连接失败</div>
+                        <div class="text-slate-300 text-xs mt-2">${error.error?.message || response.statusText}</div>
+                    `;
+                }
+            } catch (error) {
+                testContent.innerHTML = `
+                    <div class="text-red-400">❌ 请求错误</div>
+                    <div class="text-slate-300 text-xs mt-2">${error.message}</div>
+                `;
+            }
+        });
+
+        // 初始化显示
+        updateConfigDisplay();
+    </script>
+</body>
+</html>

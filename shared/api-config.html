@@ -1,0 +1,83 @@
+<!--
+    通用 API 配置组件 - HTML 模态框部分
+
+    使用方法：
+    1. 复制此文件的内容到你的 HTML <body> 中
+    2. 在 HTML 中引入 JavaScript：<script src="../../../shared/api-config.js"></script>
+    3. 初始化：initApiConfig(storageKey, defaultConfig, onConfigChange)
+-->
+
+<!-- API 配置模态框 -->
+<div id="api-config-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-800 rounded-2xl w-full max-w-lg border border-slate-700 shadow-2xl transform transition-all scale-95 opacity-0" id="api-modal-content">
+        <div class="p-6">
+            <!-- 标题栏 -->
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white">API 配置</h2>
+                <!-- 模式切换按钮 -->
+                <div class="flex items-center gap-2">
+                    <button type="button" id="mode-form-btn" class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors bg-indigo-600 text-white">
+                        表单
+                    </button>
+                    <button type="button" id="mode-json-btn" class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors bg-slate-700 text-slate-300 hover:bg-slate-600">
+                        JSON
+                    </button>
+                </div>
+            </div>
+
+            <!-- 表单模式 -->
+            <form id="api-config-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Base URL</label>
+                    <input type="text" id="api-url" placeholder="https://api.openai.com/v1"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-sm"
+                        value="https://api.openai.com/v1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">API Key</label>
+                    <input type="password" id="api-key" placeholder="sk-..."
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">模型名称</label>
+                    <input type="text" id="api-model" placeholder="gpt-3.5-turbo"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-sm"
+                        value="gpt-3.5-turbo">
+                </div>
+                <div id="api-error" class="hidden bg-red-900/30 border border-red-700 rounded-lg px-3 py-2 text-red-300 text-sm"></div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" id="close-api-config" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
+                        取消
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                        保存
+                    </button>
+                </div>
+            </form>
+
+            <!-- JSON 模式 -->
+            <div id="api-config-json" class="hidden">
+                <div class="mb-2 text-sm text-slate-400">
+                    直接编辑 JSON 配置，支持扩展字段
+                </div>
+                <textarea id="api-json-textarea"
+                    class="w-full h-48 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-sm resize-none"
+                    spellcheck="false"></textarea>
+                <div id="api-json-error" class="hidden mt-2 bg-red-900/30 border border-red-700 rounded-lg px-3 py-2 text-red-300 text-sm"></div>
+                <div class="flex justify-between items-center mt-4">
+                    <button type="button" id="format-json-btn" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
+                        格式化 JSON
+                    </button>
+                    <div class="flex gap-3">
+                        <button type="button" id="close-api-config-json" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
+                            取消
+                        </button>
+                        <button type="button" id="save-json-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                            保存
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
