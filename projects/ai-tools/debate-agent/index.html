@@ -94,6 +94,23 @@
             </div>
         </div>
 
+        <!-- Follow-up Question Section (Hidden Initially) -->
+        <div id="followup-section" class="hidden bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
+            <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <span>💬</span>
+                <span>Ask a Question</span>
+            </h3>
+            <p class="text-sm text-slate-400 mb-3">Ask follow-up questions about the debate to gain deeper insights.</p>
+            <div class="flex gap-3">
+                <input type="text" id="followup-input"
+                    class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none placeholder-slate-600"
+                    placeholder="Ask about the arguments, logic, or verdict...">
+                <button id="followup-submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg transition-all shadow-lg shadow-indigo-500/30 whitespace-nowrap">
+                    Send
+                </button>
+            </div>
+        </div>
+
     </main>
 
     <!-- Settings Modal -->
@@ -211,7 +228,15 @@
         const debateContainer = document.getElementById('debate-container');
         const emptyState = document.getElementById('empty-state');
         const exportBtn = document.getElementById('export-btn');
-        
+        const followupSection = document.getElementById('followup-section');
+        const followupInput = document.getElementById('followup-input');
+        const followupSubmit = document.getElementById('followup-submit');
+
+        // Debate State
+        let currentTopic = "";
+        let debateHistory = [];
+        let followupHistory = [];
+
         // Settings
         const settingsModal = document.getElementById('settings-modal');
         const modalContent = document.getElementById('modal-content');
@@ -230,7 +255,6 @@
         };
 
         // --- Debate History Tracking ---
-        let debateHistory = [];
 
         function loadConfig() {
             const saved = localStorage.getItem('debate_agent_config');
@@ -292,7 +316,10 @@
             debateContainer.innerHTML = '';
             emptyState.style.display = 'none';
             debateHistory = [];
+            followupHistory = [];
+            currentTopic = '';
             exportBtn.classList.add('hidden');
+            hideFollowUpSection();
         }
 
         function createSectionHeader(title) {
@@ -341,7 +368,129 @@
         }
 
         // --- Debate Logic ---
-        
+
+        function showFollowUpSection() {
+            followupSection.classList.remove('hidden');
+            followupInput.focus();
+        }
+
+        function hideFollowUpSection() {
+            followupSection.classList.add('hidden');
+        }
+
+        function createFollowUpCard(question, answer) {
+            const div = document.createElement('div');
+            div.className = 'bg-slate-800/50 rounded-xl p-5 border border-slate-700/50 mb-4';
+
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'mb-3 pb-3 border-b border-slate-700';
+            questionDiv.innerHTML = `
+                <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Your Question</div>
+                <div class="text-slate-200 font-medium">${question}</div>
+            `;
+
+            const answerDiv = document.createElement('div');
+            answerDiv.className = 'text-slate-300 text-sm leading-relaxed markdown-body';
+            answerDiv.innerHTML = marked.parse(answer);
+
+            div.appendChild(questionDiv);
+            div.appendChild(answerDiv);
+
+            debateContainer.appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            return div;
+        }
+
+        function updateFollowUpCard(div, answer) {
+            const answerDiv = div.querySelector('.markdown-body');
+            answerDiv.innerHTML = marked.parse(answer);
+        }
+
+        async function handleFollowUp() {
+            const question = followupInput.value.trim();
+            if (!question) return;
+
+            if (!currentTopic) {
+                alert("Please start a debate first.");
+                return;
+            }
+
+            followupInput.value = '';
+            followupSubmit.disabled = true;
+
+            // Create card with loading state
+            const card = createFollowUpCard(question, '*Thinking...*');
+
+            try {
+                const llm = await getLLM();
+
+                // Build context from debate history
+                let context = `Debate Topic: "${currentTopic}"\n\n`;
+                context += `Debate History:\n`;
+                debateHistory.forEach((entry, idx) => {
+                    context += `\n[${idx + 1}] ${entry.role} (${entry.round}):\n${entry.content}\n`;
+                });
+
+                if (followupHistory.length > 0) {
+                    context += `\n\nPrevious Follow-up Questions:\n`;
+                    followupHistory.forEach((item, idx) => {
+                        context += `\n[Q${idx + 1}] ${item.question}\n[A${idx + 1}] ${item.answer}\n`;
+                    });
+                }
+
+                const prompt = `${context}
+
+**Your Task:**
+Answer the user's question based on the debate context above. Provide a thorough, analytical response that references specific arguments from the debate when relevant.
+
+User's Question: "${question}"
+
+**Constraints:**
+1. Output in the SAME LANGUAGE as the debate topic.
+2. Base your answer on the actual debate content.
+3. Be objective and analytical.
+4. If the question is unrelated to the debate, politely redirect to the debate topic.`;
+
+                let hasStarted = false;
+                const response = await llm.invokeStream([
+                    { role: 'system', content: 'You are an analytical debate assistant. You provide thoughtful, evidence-based answers about debates, referencing specific arguments and reasoning.' },
+                    { role: 'user', content: prompt }
+                ], (chunk, fullText) => {
+                    if (!hasStarted) {
+                        hasStarted = true;
+                    }
+                    updateFollowUpCard(card, fullText);
+                });
+
+                // Save to follow-up history
+                followupHistory.push({ question, answer: response, timestamp: new Date().toISOString() });
+
+                // Also add to main debate history for export
+                debateHistory.push({
+                    role: 'Follow-up',
+                    round: `Q${followupHistory.length}`,
+                    content: `Q: ${question}\n\nA: ${response}`,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                console.error("Follow-up error:", error);
+                updateFollowUpCard(card, `**Error:** ${error.message}`);
+            } finally {
+                followupSubmit.disabled = false;
+                followupInput.focus();
+            }
+        }
+
+        followupSubmit.addEventListener('click', handleFollowUp);
+        followupInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleFollowUp();
+            }
+        });
+
+
         async function getLLM() {
             if (!config.apiKey) {
                 openModal();
@@ -443,13 +592,14 @@ Your goal is to oversee the debate, ensure logical consistency, and provide the 
 
         async function runDebate() {
             const topic = topicInput.value.trim();
-            
+
             if (!topic) {
                 alert("Please enter a debate topic.");
                 return;
             }
 
             try {
+                currentTopic = topic;
                 await getLLM(); 
                 
                 startBtn.disabled = true;
@@ -610,6 +760,9 @@ Judge's Guidance:
 
                 // Show Export Button
                 exportBtn.classList.remove('hidden');
+
+                // Show Follow-up Section
+                showFollowUpSection();
 
             } catch (error) {
                 console.error(error);
