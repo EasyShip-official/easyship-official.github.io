@@ -36,15 +36,6 @@
     "tags": ["Productivity", "Vue"]
   },
   {
-    "id": "api-config-demo",
-    "title": "API Config Demo",
-    "description": "通用 API 配置组件演示 - 支持表单和 JSON 双模式输入",
-    "icon": "⚙️",
-    "url": "./projects/productivity/api-config-demo/index.html",
-    "category": "productivity",
-    "tags": ["Tool", "Demo", "Shared"]
-  },
-  {
     "id": "lucidity-clock",
     "title": "The Lucidity Clock",
     "description": "Digital wellness dashboard for emotional detachment and salary visualization.",
