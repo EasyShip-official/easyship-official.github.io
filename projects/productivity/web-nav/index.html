@@ -212,8 +212,9 @@
     <!-- 添加/编辑链接模态框 -->
     <div id="linkModal" class="fixed inset-0 z-50 hidden">
         <div class="modal-overlay absolute inset-0" onclick="closeModal('linkModal')"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md animate-scale-in">
-            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 m-4">
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="w-full max-w-md animate-scale-in">
+                <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8">
                 <h2 id="linkModalTitle" class="text-2xl font-bold text-gray-800 dark:text-white mb-6">添加链接</h2>
                 <form id="linkForm" class="space-y-5">
                     <input type="hidden" id="linkId">
@@ -243,6 +244,7 @@
                         </button>
                     </div>
                 </form>
+                </div>
             </div>
         </div>
     </div>
@@ -250,8 +252,9 @@
     <!-- 添加/编辑分类模态框 -->
     <div id="categoryModal" class="fixed inset-0 z-50 hidden">
         <div class="modal-overlay absolute inset-0" onclick="closeModal('categoryModal')"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md animate-scale-in">
-            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 m-4">
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="w-full max-w-md animate-scale-in">
+                <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8">
                 <h2 id="categoryModalTitle" class="text-2xl font-bold text-gray-800 dark:text-white mb-6">新建分类</h2>
                 <form id="categoryForm" class="space-y-5">
                     <input type="hidden" id="categoryId">
@@ -286,6 +289,7 @@
                         </button>
                     </div>
                 </form>
+                </div>
             </div>
         </div>
     </div>
@@ -293,8 +297,9 @@
     <!-- 设置模态框 -->
     <div id="settingsModal" class="fixed inset-0 z-50 hidden">
         <div class="modal-overlay absolute inset-0" onclick="closeModal('settingsModal')"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md animate-scale-in">
-            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 m-4">
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="w-full max-w-md animate-scale-in">
+                <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8">
                 <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">⚙️ 设置</h2>
                 <div class="space-y-4">
                     <button id="exportBtn" class="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
@@ -322,6 +327,7 @@
                 <button onclick="closeModal('settingsModal')" class="w-full mt-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl transition font-medium">
                     关闭
                 </button>
+                </div>
             </div>
         </div>
     </div>
