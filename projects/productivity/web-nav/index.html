@@ -13,9 +13,9 @@
                     animation: {
                         'gradient-x': 'gradient-x 15s ease infinite',
                         'float': 'float 3s ease-in-out infinite',
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'slide-up': 'slide-up 0.3s ease-out',
                         'scale-in': 'scale-in 0.2s ease-out',
+                        'folder-open': 'folder-open 0.3s ease-out',
                     },
                     keyframes: {
                         'gradient-x': {
@@ -38,6 +38,10 @@
                         },
                         'scale-in': {
                             '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        'folder-open': {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
                             '100%': { transform: 'scale(1)', opacity: '1' },
                         },
                     },
@@ -63,52 +67,33 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .card-gradient {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
-        }
-
-        .dark .card-gradient {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
-        }
-
-        .glow {
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .dark .glow {
-            box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
-        }
-
-        .nav-card {
+        .folder-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
         }
 
-        .nav-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        .folder-card:hover {
+            transform: translateY(-12px) scale(1.02);
         }
 
-        .dark .nav-card:hover {
-            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
+        .folder-card:hover .folder-icon {
+            transform: scale(1.1) rotate(5deg);
         }
 
-        .modal-overlay {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
+        .folder-icon {
+            transition: transform 0.3s ease;
         }
 
-        .dragging {
-            opacity: 0.5;
-            transform: rotate(3deg);
+        .link-item {
+            transition: all 0.2s ease;
         }
 
-        .drag-over {
-            border: 2px dashed #6366f1;
-            background: rgba(99, 102, 241, 0.1);
+        .link-item:hover {
+            transform: translateX(8px);
         }
 
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         ::-webkit-scrollbar-track {
@@ -116,19 +101,24 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #6366f1;
-            border-radius: 4px;
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #4f46e5;
+            background: rgba(99, 102, 241, 0.5);
+        }
+
+        .modal-content {
+            max-height: 70vh;
+            overflow-y: auto;
         }
     </style>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 </head>
-<body class="min-h-screen transition-colors duration-500">
+<body class="h-screen overflow-hidden transition-colors duration-500">
     <!-- 动态背景 -->
     <div class="fixed inset-0 -z-10 overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900 animate-gradient-x"></div>
@@ -137,76 +127,112 @@
         <div class="absolute bottom-20 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float" style="animation-delay: 2s;"></div>
     </div>
 
-    <div class="container mx-auto px-4 py-8 relative">
+    <div class="h-screen flex flex-col p-4 md:p-6 relative">
         <!-- 头部 -->
-        <header class="mb-8 animate-slide-up">
-            <div class="flex items-center justify-between mb-6">
+        <header class="flex-shrink-0 mb-4 animate-slide-up">
+            <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-4">
-                    <h1 class="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                    <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
                         🧭 Web Navigator
                     </h1>
-                    <span class="px-3 py-1 text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 rounded-full">Beta</span>
+                    <span class="px-3 py-1 text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 rounded-full hidden md:inline-block">Beta</span>
                 </div>
-                <a href="../../../index.html" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white/50 dark:hover:bg-black/20 rounded-lg transition-all duration-300 flex items-center gap-2 glass">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    返回主页
-                </a>
-            </div>
-
-            <!-- 控制栏 -->
-            <div class="flex flex-col md:flex-row gap-4">
-                <div class="flex-1 relative">
-                    <input
-                        type="text"
-                        id="searchInput"
-                        placeholder="🔍 搜索导航链接..."
-                        class="w-full px-5 py-4 rounded-2xl border-2 border-transparent bg-white/70 dark:bg-gray-800/70 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl"
-                    >
-                </div>
-                <div class="flex gap-3">
-                    <button
-                        id="addLinkBtn"
-                        class="px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-2xl transition-all duration-300 font-medium shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        添加链接
-                    </button>
+                <div class="flex items-center gap-2">
                     <button
                         id="addCategoryBtn"
-                        class="px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-300 font-medium shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2"
+                        class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl transition-all duration-300 font-medium shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2 text-sm"
+                        title="新建分类"
                     >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                         </svg>
-                        新建分类
+                        <span class="hidden md:inline">新建分类</span>
                     </button>
                     <button
                         id="themeToggle"
-                        class="px-5 py-4 bg-white/70 dark:bg-gray-800/70 hover:bg-white dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 glass"
+                        class="p-2 bg-white/70 dark:bg-gray-800/70 hover:bg-white dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl transition-all duration-300 shadow-lg glass"
+                        title="切换主题"
                     >
                         <span id="themeIcon">🌙</span>
                     </button>
                     <button
                         id="settingsBtn"
-                        class="px-5 py-4 bg-white/70 dark:bg-gray-800/70 hover:bg-white dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 glass"
+                        class="p-2 bg-white/70 dark:bg-gray-800/70 hover:bg-white dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl transition-all duration-300 shadow-lg glass"
+                        title="设置"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
                     </button>
+                    <a href="../../../index.html" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white/50 dark:hover:bg-black/20 rounded-xl transition-all duration-300 flex items-center gap-2 glass text-sm" title="返回主页">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        <span class="hidden md:inline">返回</span>
+                    </a>
                 </div>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="relative max-w-2xl mx-auto">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="🔍 搜索导航链接..."
+                    class="w-full px-5 py-3 rounded-2xl border-2 border-transparent bg-white/70 dark:bg-gray-800/70 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
             </div>
         </header>
 
-        <!-- 主内容区 -->
-        <main id="mainContent" class="space-y-8">
-            <!-- 动态生成内容 -->
+        <!-- 主内容区 - 文件夹网格 -->
+        <main id="mainContent" class="flex-1 overflow-hidden">
+            <!-- 动态生成文件夹 -->
         </main>
+    </div>
+
+    <!-- 文件夹展开模态框 -->
+    <div id="folderModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeFolderModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="w-full max-w-4xl animate-folder-open">
+                <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden">
+                    <!-- 模态框头部 -->
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span id="folderModalIcon" class="text-4xl"></span>
+                            <div>
+                                <h2 id="folderModalTitle" class="text-2xl font-bold text-gray-800 dark:text-white"></h2>
+                                <p id="folderModalCount" class="text-sm text-gray-500 dark:text-gray-400"></p>
+                            </div>
+                        </div>
+                        <button onclick="closeFolderModal()" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- 链接列表 -->
+                    <div id="folderModalLinks" class="modal-content p-6">
+                        <!-- 动态生成 -->
+                    </div>
+
+                    <!-- 底部操作栏 -->
+                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+                        <button onclick="openAddLinkModalInFolder()" class="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            添加链接
+                        </button>
+                        <button id="editCategoryBtn" class="px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl transition font-medium">
+                            编辑分类
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- 添加/编辑链接模态框 -->
@@ -215,35 +241,30 @@
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="w-full max-w-md animate-scale-in">
                 <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8">
-                <h2 id="linkModalTitle" class="text-2xl font-bold text-gray-800 dark:text-white mb-6">添加链接</h2>
-                <form id="linkForm" class="space-y-5">
-                    <input type="hidden" id="linkId">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">网站名称</label>
-                        <input type="text" id="linkTitle" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">网址 URL</label>
-                        <input type="url" id="linkUrl" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">图标 (Emoji)</label>
-                        <input type="text" id="linkIcon" maxlength="2" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition text-2xl text-center" placeholder="🔗">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">分类</label>
-                        <select id="linkCategory" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                        </select>
-                    </div>
-                    <div class="flex gap-3 pt-4">
-                        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl">
-                            保存
-                        </button>
-                        <button type="button" onclick="closeModal('linkModal')" class="flex-1 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl transition font-medium">
-                            取消
-                        </button>
-                    </div>
-                </form>
+                    <h2 id="linkModalTitle" class="text-2xl font-bold text-gray-800 dark:text-white mb-6">添加链接</h2>
+                    <form id="linkForm" class="space-y-5">
+                        <input type="hidden" id="linkId">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">网站名称</label>
+                            <input type="text" id="linkTitle" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">网址 URL</label>
+                            <input type="url" id="linkUrl" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">图标 (Emoji)</label>
+                            <input type="text" id="linkIcon" maxlength="2" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition text-2xl text-center" placeholder="🔗">
+                        </div>
+                        <div class="flex gap-3 pt-4">
+                            <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl">
+                                保存
+                            </button>
+                            <button type="button" onclick="closeModal('linkModal')" class="flex-1 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl transition font-medium">
+                                取消
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -255,40 +276,40 @@
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="w-full max-w-md animate-scale-in">
                 <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8">
-                <h2 id="categoryModalTitle" class="text-2xl font-bold text-gray-800 dark:text-white mb-6">新建分类</h2>
-                <form id="categoryForm" class="space-y-5">
-                    <input type="hidden" id="categoryId">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">分类名称</label>
-                        <input type="text" id="categoryName" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">图标 (Emoji)</label>
-                        <input type="text" id="categoryIcon" maxlength="2" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition text-2xl text-center" placeholder="📁">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">主题色</label>
-                        <div class="flex gap-2 flex-wrap" id="colorPicker">
-                            <button type="button" data-color="#6366f1" class="w-10 h-10 rounded-full bg-indigo-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-indigo-500"></button>
-                            <button type="button" data-color="#8b5cf6" class="w-10 h-10 rounded-full bg-purple-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-purple-500"></button>
-                            <button type="button" data-color="#ec4899" class="w-10 h-10 rounded-full bg-pink-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-pink-500"></button>
-                            <button type="button" data-color="#ef4444" class="w-10 h-10 rounded-full bg-red-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-red-500"></button>
-                            <button type="button" data-color="#f97316" class="w-10 h-10 rounded-full bg-orange-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-orange-500"></button>
-                            <button type="button" data-color="#eab308" class="w-10 h-10 rounded-full bg-yellow-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-yellow-500"></button>
-                            <button type="button" data-color="#22c55e" class="w-10 h-10 rounded-full bg-green-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-green-500"></button>
-                            <button type="button" data-color="#14b8a6" class="w-10 h-10 rounded-full bg-teal-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-teal-500"></button>
+                    <h2 id="categoryModalTitle" class="text-2xl font-bold text-gray-800 dark:text-white mb-6">新建分类</h2>
+                    <form id="categoryForm" class="space-y-5">
+                        <input type="hidden" id="categoryId">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">分类名称</label>
+                            <input type="text" id="categoryName" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
                         </div>
-                        <input type="hidden" id="categoryColor" value="#6366f1">
-                    </div>
-                    <div class="flex gap-3 pt-4">
-                        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl">
-                            保存
-                        </button>
-                        <button type="button" onclick="closeModal('categoryModal')" class="flex-1 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl transition font-medium">
-                            取消
-                        </button>
-                    </div>
-                </form>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">图标 (Emoji)</label>
+                            <input type="text" id="categoryIcon" maxlength="2" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition text-2xl text-center" placeholder="📁">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">主题色</label>
+                            <div class="flex gap-2 flex-wrap" id="colorPicker">
+                                <button type="button" data-color="#6366f1" class="w-10 h-10 rounded-full bg-indigo-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-indigo-500"></button>
+                                <button type="button" data-color="#8b5cf6" class="w-10 h-10 rounded-full bg-purple-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-purple-500"></button>
+                                <button type="button" data-color="#ec4899" class="w-10 h-10 rounded-full bg-pink-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-pink-500"></button>
+                                <button type="button" data-color="#ef4444" class="w-10 h-10 rounded-full bg-red-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-red-500"></button>
+                                <button type="button" data-color="#f97316" class="w-10 h-10 rounded-full bg-orange-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-orange-500"></button>
+                                <button type="button" data-color="#eab308" class="w-10 h-10 rounded-full bg-yellow-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-yellow-500"></button>
+                                <button type="button" data-color="#22c55e" class="w-10 h-10 rounded-full bg-green-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-green-500"></button>
+                                <button type="button" data-color="#14b8a6" class="w-10 h-10 rounded-full bg-teal-500 hover:scale-110 transition ring-2 ring-offset-2 ring-transparent hover:ring-teal-500"></button>
+                            </div>
+                            <input type="hidden" id="categoryColor" value="#6366f1">
+                        </div>
+                        <div class="flex gap-3 pt-4">
+                            <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl">
+                                保存
+                            </button>
+                            <button type="button" onclick="closeModal('categoryModal')" class="flex-1 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl transition font-medium">
+                                取消
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -300,33 +321,33 @@
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="w-full max-w-md animate-scale-in">
                 <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8">
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">⚙️ 设置</h2>
-                <div class="space-y-4">
-                    <button id="exportBtn" class="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                        </svg>
-                        导出数据
-                    </button>
-                    <div>
-                        <label class="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl flex items-center justify-center gap-2 cursor-pointer">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">⚙️ 设置</h2>
+                    <div class="space-y-4">
+                        <button id="exportBtn" class="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                             </svg>
-                            导入数据
-                            <input type="file" id="importInput" accept=".json" class="hidden">
-                        </label>
+                            导出数据
+                        </button>
+                        <div>
+                            <label class="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl flex items-center justify-center gap-2 cursor-pointer">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                导入数据
+                                <input type="file" id="importInput" accept=".json" class="hidden">
+                            </label>
+                        </div>
+                        <button id="resetBtn" class="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            重置所有数据
+                        </button>
                     </div>
-                    <button id="resetBtn" class="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl transition font-medium shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                        重置所有数据
+                    <button onclick="closeModal('settingsModal')" class="w-full mt-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl transition font-medium">
+                        关闭
                     </button>
-                </div>
-                <button onclick="closeModal('settingsModal')" class="w-full mt-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl transition font-medium">
-                    关闭
-                </button>
                 </div>
             </div>
         </div>
@@ -354,6 +375,7 @@
         let data = loadData();
         let editingLinkId = null;
         let editingCategoryId = null;
+        let currentFolderId = null;
         let isDarkMode = localStorage.getItem('darkMode') === 'true';
 
         // ==================== 数据操作 ====================
@@ -379,78 +401,130 @@
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const container = document.getElementById('mainContent');
 
-            let html = '';
+            let html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 h-full overflow-y-auto p-2">';
 
             for (const category of data.categories) {
                 const links = data.links
                     .filter(l => l.categoryId === category.id)
                     .filter(l => !searchTerm ||
                             l.title.toLowerCase().includes(searchTerm) ||
-                            l.url.toLowerCase().includes(searchTerm))
-                    .sort((a, b) => a.order - b.order);
+                            l.url.toLowerCase().includes(searchTerm));
 
                 if (links.length === 0 && searchTerm) continue;
 
-                html += `
-                    <div class="animate-slide-up" style="animation-delay: ${data.categories.indexOf(category) * 0.1}s">
-                        <div class="flex items-center gap-3 mb-4">
-                            <span class="text-3xl">${category.icon}</span>
-                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">${category.name}</h2>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">(${links.length})</span>
-                            <button onclick="deleteCategory('${category.id}')" class="ml-auto p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="删除分类">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" data-category="${category.id}">
-                            ${links.map(link => renderLinkCard(link, category.color)).join('')}
-                            <div class="nav-card card-gradient rounded-2xl p-6 cursor-pointer border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-indigo-500 flex flex-col items-center justify-center min-h-[140px] transition-all duration-300" onclick="openAddLinkModal('${category.id}')">
-                                <div class="text-4xl mb-2 opacity-50">+</div>
-                                <span class="text-sm text-gray-500 dark:text-gray-400">添加链接</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                html += renderFolderCard(category, links);
             }
 
-            if (html === '') {
+            html += '</div>';
+
+            if (searchTerm && data.categories.every(c => {
+                const links = data.links.filter(l =>
+                    l.categoryId === c.id &&
+                    (l.title.toLowerCase().includes(searchTerm) || l.url.toLowerCase().includes(searchTerm))
+                );
+                return links.length === 0;
+            })) {
                 html = `
-                    <div class="text-center py-20">
-                        <div class="text-6xl mb-4 animate-float">🔍</div>
-                        <p class="text-xl text-gray-500 dark:text-gray-400">未找到匹配的链接</p>
+                    <div class="h-full flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="text-6xl mb-4 animate-float">🔍</div>
+                            <p class="text-xl text-gray-500 dark:text-gray-400">未找到匹配的链接</p>
+                        </div>
                     </div>
                 `;
             }
 
             container.innerHTML = html;
-            initDragAndDrop();
         }
 
-        function renderLinkCard(link, color) {
+        function renderFolderCard(category, links) {
             return `
-                <div class="nav-card card-gradient rounded-2xl p-6 cursor-pointer relative group min-h-[140px] flex flex-col items-center justify-center"
-                     draggable="true"
-                     data-link-id="${link.id}"
-                     onclick="window.open('${link.url}', '_blank')">
-                    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                        <button onclick="event.stopPropagation(); editLink('${link.id}')" class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-lg transition" title="编辑">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                        </button>
-                        <button onclick="event.stopPropagation(); deleteLink('${link.id}')" class="p-2 text-gray-400 hover:text-red-500 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-lg transition" title="删除">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                        </button>
+                <div class="folder-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-3xl shadow-lg hover:shadow-2xl p-6 flex flex-col items-center justify-center min-h-[160px] border-2 border-transparent hover:border-indigo-400 dark:hover:border-indigo-500 relative overflow-hidden"
+                     onclick="openFolder('${category.id}')"
+                     style="animation: slide-up 0.3s ease-out ${data.categories.indexOf(category) * 0.05}s both">
+                    <div class="absolute top-0 left-0 right-0 h-2 rounded-t-3xl" style="background: linear-gradient(90deg, ${category.color}, ${category.color}dd)"></div>
+                    <div class="folder-icon text-6xl mb-4">${category.icon}</div>
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white text-center">${category.name}</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${links.length} 个链接</p>
+                    <div class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
                     </div>
-                    <div class="text-5xl mb-3 transform group-hover:scale-110 transition-transform duration-300">${link.icon || '🔗'}</div>
-                    <h3 class="font-semibold text-gray-800 dark:text-white text-center text-sm truncate w-full">${link.title}</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 text-center truncate w-full mt-1">${new URL(link.url).hostname}</p>
-                    <div class="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl" style="background: ${color}"></div>
                 </div>
             `;
+        }
+
+        // ==================== 文件夹模态框 ====================
+        function openFolder(categoryId) {
+            currentFolderId = categoryId;
+            const category = data.categories.find(c => c.id === categoryId);
+            if (!category) return;
+
+            const links = data.links
+                .filter(l => l.categoryId === categoryId)
+                .sort((a, b) => a.order - b.order);
+
+            document.getElementById('folderModalIcon').textContent = category.icon;
+            document.getElementById('folderModalTitle').textContent = category.name;
+            document.getElementById('folderModalCount').textContent = `${links.length} 个链接`;
+
+            const linksContainer = document.getElementById('folderModalLinks');
+            if (links.length === 0) {
+                linksContainer.innerHTML = `
+                    <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+                        <p class="text-lg">这个文件夹还没有链接</p>
+                        <p class="text-sm mt-2">点击下方"添加链接"开始添加</p>
+                    </div>
+                `;
+            } else {
+                linksContainer.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${links.map(link => `
+                            <div class="link-item flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 group relative">
+                                <div class="text-3xl">${link.icon || '🔗'}</div>
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="font-semibold text-gray-800 dark:text-white truncate">${link.title}</h3>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">${new URL(link.url).hostname}</p>
+                                </div>
+                                <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="event.stopPropagation(); window.open('${link.url}', '_blank')" class="p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg" title="打开">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                        </svg>
+                                    </button>
+                                    <button onclick="event.stopPropagation(); editLink('${link.id}')" class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg" title="编辑">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button onclick="event.stopPropagation(); deleteLink('${link.id}')" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" title="删除">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            document.getElementById('editCategoryBtn').onclick = () => {
+                closeFolderModal();
+                editCategory(categoryId);
+            };
+
+            openModal('folderModal');
+        }
+
+        function closeFolderModal() {
+            closeModal('folderModal');
+            currentFolderId = null;
+        }
+
+        function openAddLinkModalInFolder() {
+            openAddLinkModal(currentFolderId);
         }
 
         // ==================== 链接 CRUD ====================
@@ -459,12 +533,6 @@
             document.getElementById('linkModalTitle').textContent = '添加链接';
             document.getElementById('linkForm').reset();
             document.getElementById('linkId').value = '';
-
-            populateCategorySelect();
-            if (categoryId) {
-                document.getElementById('linkCategory').value = categoryId;
-            }
-
             openModal('linkModal');
         }
 
@@ -479,9 +547,6 @@
             document.getElementById('linkUrl').value = link.url;
             document.getElementById('linkIcon').value = link.icon || '';
 
-            populateCategorySelect();
-            document.getElementById('linkCategory').value = link.categoryId;
-
             openModal('linkModal');
         }
 
@@ -489,6 +554,7 @@
             if (!confirm('确定要删除这个链接吗？')) return;
             data.links = data.links.filter(l => l.id !== id);
             saveData();
+            closeFolderModal();
             render();
         }
 
@@ -498,7 +564,7 @@
             const title = document.getElementById('linkTitle').value.trim();
             const url = document.getElementById('linkUrl').value.trim();
             const icon = document.getElementById('linkIcon').value.trim();
-            const categoryId = document.getElementById('linkCategory').value;
+            const categoryId = currentFolderId;
 
             if (!title || !url || !categoryId) {
                 alert('请填写所有必填字段');
@@ -516,7 +582,6 @@
                     link.title = title;
                     link.url = finalUrl;
                     link.icon = icon;
-                    link.categoryId = categoryId;
                 }
             } else {
                 const maxOrder = Math.max(0, ...data.links.filter(l => l.categoryId === categoryId).map(l => l.order));
@@ -531,8 +596,9 @@
             }
 
             saveData();
-            render();
             closeModal('linkModal');
+            closeFolderModal();
+            render();
         }
 
         // ==================== 分类 CRUD ====================
@@ -543,6 +609,20 @@
             document.getElementById('categoryId').value = '';
             document.getElementById('categoryColor').value = '#6366f1';
             updateColorSelection('#6366f1');
+            openModal('categoryModal');
+        }
+
+        function editCategory(id) {
+            const category = data.categories.find(c => c.id === id);
+            if (!category) return;
+
+            editingCategoryId = id;
+            document.getElementById('categoryModalTitle').textContent = '编辑分类';
+            document.getElementById('categoryId').value = category.id;
+            document.getElementById('categoryName').value = category.name;
+            document.getElementById('categoryIcon').value = category.icon;
+            document.getElementById('categoryColor').value = category.color;
+            updateColorSelection(category.color);
             openModal('categoryModal');
         }
 
@@ -588,73 +668,8 @@
             }
 
             saveData();
-            render();
             closeModal('categoryModal');
-        }
-
-        // ==================== 拖拽排序 ====================
-        function initDragAndDrop() {
-            const cards = document.querySelectorAll('[draggable="true"]');
-            const dropZones = document.querySelectorAll('[data-category]');
-
-            cards.forEach(card => {
-                card.addEventListener('dragstart', handleDragStart);
-                card.addEventListener('dragend', handleDragEnd);
-            });
-
-            dropZones.forEach(zone => {
-                zone.addEventListener('dragover', handleDragOver);
-                zone.addEventListener('drop', handleDrop);
-                zone.addEventListener('dragleave', handleDragLeave);
-            });
-        }
-
-        let draggedElement = null;
-
-        function handleDragStart(e) {
-            draggedElement = e.target;
-            e.target.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        }
-
-        function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
-            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.currentTarget.classList.add('drag-over');
-        }
-
-        function handleDragLeave(e) {
-            e.currentTarget.classList.remove('drag-over');
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            const dropZone = e.currentTarget;
-            dropZone.classList.remove('drag-over');
-
-            if (!draggedElement) return;
-
-            const linkId = draggedElement.dataset.linkId;
-            const newCategoryId = dropZone.dataset.category;
-
-            const link = data.links.find(l => l.id === linkId);
-            if (link) {
-                link.categoryId = newCategoryId;
-
-                const categoryLinks = data.links
-                    .filter(l => l.categoryId === newCategoryId)
-                    .sort((a, b) => a.order - b.order);
-
-                const maxOrder = categoryLinks.length > 0 ? Math.max(...categoryLinks.map(l => l.order)) : -1;
-                link.order = maxOrder + 1;
-
-                saveData();
-                render();
-            }
+            render();
         }
 
         // ==================== 搜索 ====================
@@ -734,13 +749,6 @@
             document.getElementById(id).classList.add('hidden');
         }
 
-        function populateCategorySelect() {
-            const select = document.getElementById('linkCategory');
-            select.innerHTML = data.categories.map(c =>
-                `<option value="${c.id}">${c.icon} ${c.name}</option>`
-            ).join('');
-        }
-
         function updateColorSelection(color) {
             document.querySelectorAll('#colorPicker button').forEach(btn => {
                 if (btn.dataset.color === color) {
@@ -764,7 +772,6 @@
 
             // 链接表单
             document.getElementById('linkForm').addEventListener('submit', saveLink);
-            document.getElementById('addLinkBtn').addEventListener('click', () => openAddLinkModal());
 
             // 分类表单
             document.getElementById('categoryForm').addEventListener('submit', saveCategory);
@@ -790,6 +797,7 @@
                     closeModal('linkModal');
                     closeModal('categoryModal');
                     closeModal('settingsModal');
+                    closeModal('folderModal');
                 }
                 if (e.ctrlKey && e.key === 'k') {
                     e.preventDefault();
