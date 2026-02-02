@@ -343,7 +343,7 @@
         let editingLinkId = null;
         let editingCategoryId = null;
         let currentFolderId = null;
-        let expandedFolderId = null;
+        let expandedFolderId = localStorage.getItem('webnav_expanded_folder');
         let isDarkMode = localStorage.getItem('darkMode') === 'true';
 
         // ==================== 数据操作 ====================
@@ -472,6 +472,14 @@
                 expandedFolderId = categoryId;
             }
             currentFolderId = expandedFolderId;
+
+            // 保存展开状态到 localStorage
+            if (expandedFolderId) {
+                localStorage.setItem('webnav_expanded_folder', expandedFolderId);
+            } else {
+                localStorage.removeItem('webnav_expanded_folder');
+            }
+
             render();
         }
 
@@ -709,6 +717,12 @@
 
         // ==================== 事件绑定 ====================
         document.addEventListener('DOMContentLoaded', function() {
+            // 验证保存的文件夹 ID 是否仍然存在
+            if (expandedFolderId && !data.categories.find(c => c.id === expandedFolderId)) {
+                expandedFolderId = null;
+                localStorage.removeItem('webnav_expanded_folder');
+            }
+
             render();
             initTheme();
 
