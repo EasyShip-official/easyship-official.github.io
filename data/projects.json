@@ -36,6 +36,15 @@
     "tags": ["Productivity", "Vue"]
   },
   {
+    "id": "web-nav",
+    "title": "Web Navigator",
+    "description": "Smart and efficient web navigation tool for quick access to your favorite websites.",
+    "icon": "🧭",
+    "url": "./projects/productivity/web-nav/index.html",
+    "category": "productivity",
+    "tags": ["Productivity", "Tool"]
+  },
+  {
     "id": "lucidity-clock",
     "title": "The Lucidity Clock",
     "description": "Digital wellness dashboard for emotional detachment and salary visualization.",

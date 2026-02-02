@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Navigator - 网页导航</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 头部 -->
+        <header class="mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-white">🧭 Web Navigator</h1>
+                <a href="../../../index.html" class="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition">
+                    ← 返回主页
+                </a>
+            </div>
+            <!-- 搜索栏 -->
+            <div class="flex gap-4">
+                <div class="flex-1 relative">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="🔍 搜索导航链接..."
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+                <button
+                    id="addLinkBtn"
+                    class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition font-medium"
+                >
+                    ➕ 添加链接
+                </button>
+                <button
+                    id="settingsBtn"
+                    class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition font-medium"
+                >
+                    ⚙️ 设置
+                </button>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main id="mainContent">
+            <div class="text-center py-20 text-gray-500 dark:text-gray-400">
+                <p class="text-xl">🚧 开发中...</p>
+                <p class="mt-2">网页导航功能即将上线</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // TODO: 实现导航功能
+        console.log('Web Navigator - 开发中');
+    </script>
+</body>
+</html>
