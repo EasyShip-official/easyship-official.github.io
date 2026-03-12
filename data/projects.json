@@ -52,5 +52,14 @@
     "url": "./projects/experimental/lucidity-clock/index.html",
     "category": "experimental",
     "tags": ["Wellness", "Cyberpunk", "Vue"]
+  },
+  {
+    "id": "openclaw-shrimp-guide",
+    "title": "OpenClaw Shrimp Guide",
+    "description": "Agent-facing guide to using OpenClaw as a long-running collaborative system, based on real practice instead of hype.",
+    "icon": "🦞",
+    "url": "./docs/openclaw-shrimp/index.html",
+    "category": "ai-tools",
+    "tags": ["OpenClaw", "Agent", "Guide"]
   }
 ]
