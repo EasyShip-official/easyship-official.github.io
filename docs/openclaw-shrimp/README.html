@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenClaw 养虾实践技术报告 · OpenClaw 养虾实践</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: { 850: '#1e293b', 900: '#0f172a' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .prose-custom h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; color: white; font-weight: 800; }
+    .prose-custom h2 { font-size: 1.5rem; line-height: 1.3; margin-top: 2rem; margin-bottom: 0.75rem; color: white; font-weight: 700; padding-top: 1rem; border-top: 1px solid #334155; }
+    .prose-custom h2:first-of-type { border-top: none; padding-top: 0; }
+    .prose-custom h3 { font-size: 1.125rem; line-height: 1.4; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #e2e8f0; font-weight: 700; }
+    .prose-custom p, .prose-custom li { color: #cbd5e1; line-height: 1.85; }
+    .prose-custom ul { padding-left: 1.25rem; list-style: disc; }
+    .prose-custom ol { padding-left: 1.25rem; list-style: decimal; }
+    .prose-custom blockquote { border-left: 4px solid #6366f1; padding-left: 1rem; color: #e2e8f0; margin: 1rem 0; font-style: italic; }
+    .prose-custom code { background: #0f172a; color: #e2e8f0; padding: 0.15rem 0.35rem; border-radius: 0.35rem; font-size: 0.875em; }
+    .prose-custom pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; margin: 1rem 0; }
+    .prose-custom pre code { background: transparent; padding: 0; }
+    .prose-custom strong { color: #f8fafc; }
+    .prose-custom table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .prose-custom th { background: #1e293b; color: white; padding: 0.5rem 1rem; text-align: left; font-weight: 600; border-bottom: 2px solid #334155; }
+    .prose-custom td { padding: 0.5rem 1rem; border-bottom: 1px solid #334155; color: #cbd5e1; }
+    .prose-custom tr:hover td { background: #1e293b; }
+    .prose-custom hr { border-color: #334155; margin: 2rem 0; }
+    .prose-custom a { color: #818cf8; text-decoration: underline; }
+    .prose-custom a:hover { color: #a5b4fc; }
+    .prose-custom img { max-width: 100%; border-radius: 0.5rem; margin: 1rem 0; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-200 min-h-screen font-sans selection:bg-indigo-500 selection:text-white">
+
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">🦞</span>
+        <a href="index.html" class="text-xl font-bold tracking-tight text-white hover:text-indigo-300 transition-colors">OpenClaw 养虾实践</a>
+      </div>
+      <a href="index.html" class="text-slate-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-800 flex items-center gap-2">
+        ← 内容目录
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <article class="prose-custom bg-slate-800/60 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-xl shadow-black/10">
+      <h1>OpenClaw 养虾实践技术报告</h1>
+<blockquote>
+<p>文档类型：技术报告<br>目标：记录一套基于 OpenClaw + Feishu + GitHub + Skills 的真实落地过程，重点说明<strong>做了什么、怎么做的、踩了什么坑、当前卡点是什么</strong>。<br>说明：本文只保留可复用的技术经验，不写个人背景叙事，不写抒情性内容。</p>
+</blockquote>
+<hr>
+<h2>1. 项目目标</h2>
+<p>本轮工作的目标不是泛泛体验 OpenClaw，而是围绕一个真实运行中的远程实例，逐步把以下能力打通：</p>
+<ol>
+<li><strong>Feishu 作为主交互界面</strong></li>
+<li><strong>OpenClaw 作为长期在线的执行与记忆系统</strong></li>
+<li><strong>ClawHub / Skills 作为能力扩展机制</strong></li>
+<li><strong>GitHub 作为代码与静态内容发布面</strong></li>
+<li><strong>文档沉淀为可复用 skill / reference / 静态页面资产</strong></li>
+</ol>
+<p>在执行过程中，重点不在宣传 OpenClaw，而在于：</p>
+<ul>
+<li>验证真实能力链路</li>
+<li>找到权限边界</li>
+<li>识别系统摩擦点</li>
+<li>将经验沉淀成文档和 skill</li>
+</ul>
+<hr>
+<h2>2. 当前环境概况</h2>
+<h3>2.1 运行环境</h3>
+<ul>
+<li>主机：Tencent Cloud Ubuntu 24.04.3 LTS</li>
+<li>OpenClaw 版本：2026.3.8</li>
+<li>Gateway：绑定 <code>127.0.0.1:18789</code></li>
+<li>主交互渠道：Feishu 私聊</li>
+<li>当前主要模型：<code>openai-codex/gpt-5.4</code></li>
+</ul>
+<h3>2.2 工作区设计</h3>
+<p>当前采用 OpenClaw 标准工作区 + 实际项目目录并行的方式组织：</p>
+<ul>
+<li><code>SOUL.md</code> / <code>USER.md</code> / <code>MEMORY.md</code></li>
+<li><code>memory/YYYY-MM-DD.md</code></li>
+<li><code>projects/...</code></li>
+<li><code>skills/...</code></li>
+</ul>
+<p>这种组织方式的核心作用是：</p>
+<ul>
+<li>将长期连续性外置到文件系统</li>
+<li>避免把主聊天会话当成唯一记忆容器</li>
+<li>把经验沉淀成可复用资产，而不是只留在一次对话里</li>
+</ul>
+<hr>
+<h2>3. Feishu 链路打通</h2>
+<h3>3.1 问题：Feishu 插件工具不可见</h3>
+<p>最初的问题不是 Feishu 插件未安装，而是：</p>
+<blockquote>
+<p><strong>插件工具虽然存在，但当前会话里不可见。</strong></p>
+</blockquote>
+<h3>3.2 排查方法</h3>
+<p>依次检查：</p>
+<ol>
+<li>Feishu channel 是否启用</li>
+<li>Feishu plugin 是否安装并启用</li>
+<li><code>tools.allow</code> 是否放出了 plugin 工具组</li>
+<li>Gateway 重启后工具是否重新注册</li>
+</ol>
+<h3>3.3 根因</h3>
+<p>根因确认是：</p>
+<ul>
+<li><code>tools.allow</code> 缺少 <code>group:plugins</code></li>
+</ul>
+<h3>3.4 修复</h3>
+<p>将 <code>group:plugins</code> 加入工具允许列表后，Feishu 插件工具才在当前会话可调用。</p>
+<h3>3.5 结论</h3>
+<p>这说明：</p>
+<blockquote>
+<p><strong>“渠道能用”与“插件工具可见”是两层问题。</strong></p>
+</blockquote>
+<p>以后遇到类似问题，不应直接归因于插件坏了，而应先检查工具暴露策略。</p>
+<hr>
+<h2>4. Feishu OAuth 与真实工具验证</h2>
+<h3>4.1 目标</h3>
+<p>验证 Feishu 用户态工具是否真的可以完成写操作，而不只是“理论上存在”。</p>
+<h3>4.2 方法</h3>
+<p>没有先在抽象层面讨论授权流程，而是直接调用真实 Feishu 工具，让系统自己触发 OAuth 流程。</p>
+<h3>4.3 实操结果</h3>
+<p>成功完成了：</p>
+<ul>
+<li>用户授权流程验证</li>
+<li>日历写入测试</li>
+<li>事件创建测试</li>
+</ul>
+<h3>4.4 关键经验</h3>
+<blockquote>
+<p><strong>对 Feishu 这类 OAuth 问题，真实工具调用往往比先讨论授权设计更有效。</strong></p>
+</blockquote>
+<p>也就是说：</p>
+<ul>
+<li>工具是否可见</li>
+<li>用户是否已授权</li>
+<li>当前操作是否真正可写</li>
+</ul>
+<p>最好通过一条真实 API 路径验证，而不是靠推测。</p>
+<hr>
+<h2>5. F1 日历导入任务的经验</h2>
+<h3>5.1 目标</h3>
+<p>将 2026 F1 赛季以 <strong>session 级事件</strong> 的形式写入 Feishu 日历，包括：</p>
+<ul>
+<li>FP</li>
+<li>Sprint Qualifying</li>
+<li>Sprint</li>
+<li>Qualifying</li>
+<li>Race</li>
+</ul>
+<h3>5.2 初始错误</h3>
+<p>最初错误地创建了：</p>
+<ul>
+<li>按周末块状的占位型事件</li>
+</ul>
+<p>这不符合“像会议一样逐场写入”的目标。</p>
+<h3>5.3 修正方法</h3>
+<p>采取了明确的恢复路径：</p>
+<ol>
+<li>删除错误的 24 条占位日程</li>
+<li>改为按 session 重建</li>
+<li>使用 <code>f1calendar.com</code> 的 session 时间数据</li>
+<li>转换到 <code>Asia/Shanghai (+08:00)</code> 后写入 Feishu</li>
+</ol>
+<h3>5.4 当前状态</h3>
+<p>已经完成部分赛站，后续赛站因为优先级变化暂时停止。</p>
+<h3>5.5 关键经验</h3>
+<ul>
+<li>批量写日历时，<strong>事件模型必须先对</strong>，否则后面只会越修越乱</li>
+<li>用户要求“做完再通知”时，不能把“分批推进”说成“后台持续异步执行”</li>
+<li>对长任务，必须诚实区分：<ul>
+<li>当场做一批</li>
+<li>真正后台在跑</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>6. ClawHub 与 Skills 链路打通</h2>
+<h3>6.1 初始问题</h3>
+<p>一开始尝试安装多个 skill 时，持续遇到：</p>
+<ul>
+<li><code>Rate limit exceeded</code></li>
+</ul>
+<p>包括：</p>
+<ul>
+<li><code>agent-browser</code></li>
+<li><code>wechat-reader</code></li>
+<li><code>self-improving-agent</code></li>
+</ul>
+<h3>6.2 排查结果</h3>
+<p>当时本机并没有 ClawHub 登录态。</p>
+<h3>6.3 处理方法</h3>
+<ol>
+<li>先安装 ClawHub CLI</li>
+<li>用 token 完成无浏览器登录</li>
+<li>再重试 skill 安装</li>
+</ol>
+<h3>6.4 结果</h3>
+<p>登录后成功安装：</p>
+<ul>
+<li><code>wechat-reader</code></li>
+<li><code>agent-browser</code></li>
+<li><code>self-improving-agent</code></li>
+<li><code>skill-creator</code></li>
+</ul>
+<h3>6.5 关键经验</h3>
+<blockquote>
+<p><strong>ClawHub 未登录状态下，安装请求很容易撞匿名限流。</strong></p>
+</blockquote>
+<p>因此后续遇到 skill 装不上时，优先排查顺序应为：</p>
+<ol>
+<li>ClawHub CLI 是否存在</li>
+<li>是否已登录</li>
+<li>skill 本身是否被标记 suspicious</li>
+<li>当前会话是否已加载 skill</li>
+<li>skill 依赖的外部二进制 / 系统依赖是否就绪</li>
+</ol>
+<hr>
+<h2>7. Browser / WeChat 阅读链路实践</h2>
+<h3>7.1 目标</h3>
+<p>打通微信公众号文章阅读能力。</p>
+<h3>7.2 路线</h3>
+<p>选择的能力链是：</p>
+<ul>
+<li><code>wechat-reader</code> skill</li>
+<li><code>agent-browser</code></li>
+<li>Chromium browser binaries</li>
+</ul>
+<h3>7.3 当前结果</h3>
+<p>已经完成：</p>
+<ul>
+<li><code>wechat-reader</code> 安装</li>
+<li><code>agent-browser</code> 安装</li>
+<li>Chromium / Headless Shell / FFmpeg 下载完成</li>
+</ul>
+<h3>7.4 当前卡点</h3>
+<p>浏览器实际启动时报错：</p>
+<ul>
+<li>缺少系统共享库，如 <code>libatk-1.0.so.0</code></li>
+</ul>
+<h3>7.5 根因分析</h3>
+<p>这里的链路已经证明：</p>
+<ul>
+<li>skill 已装成功</li>
+<li>CLI 已存在</li>
+<li>browser binaries 已下载</li>
+<li><strong>但系统依赖未补齐</strong></li>
+</ul>
+<p>也就是说：</p>
+<blockquote>
+<p><strong>“skill 安装成功”不等于“能力已可用”。</strong></p>
+</blockquote>
+<h3>7.6 当前限制</h3>
+<p>由于当前 Feishu 会话未开放 <code>tools.elevated</code>，所以无法在该会话里直接做系统包安装。</p>
+<h3>7.7 关键经验</h3>
+<p>浏览器类能力的排查顺序应固定为：</p>
+<ol>
+<li>skill 是否安装</li>
+<li>CLI 是否可调用</li>
+<li>browser binaries 是否下载</li>
+<li>系统共享库是否齐全</li>
+<li>当前执行会话是否允许安装系统依赖</li>
+</ol>
+<hr>
+<h2>8. 权限边界识别</h2>
+<h3>8.1 当前实际权限</h3>
+<p>当前 Feishu 私聊会话已经具备：</p>
+<ul>
+<li>普通 shell 命令执行</li>
+<li>文件读写</li>
+<li>Web 搜索 / 网页抓取</li>
+<li>插件工具调用</li>
+<li>ClawHub 安装与登录</li>
+</ul>
+<p>但不具备：</p>
+<ul>
+<li>host 提权执行</li>
+<li>系统级依赖安装</li>
+<li>直接 sudo / apt 修改机器环境</li>
+</ul>
+<h3>8.2 根因</h3>
+<p>根因不是 Linux 本身权限不足，而是：</p>
+<ul>
+<li>OpenClaw 配置未开启 <code>tools.elevated</code></li>
+<li>且未对当前 Feishu provider / sender 放行</li>
+</ul>
+<h3>8.3 关键理解</h3>
+<blockquote>
+<p><strong>Feishu 插件能力、普通工具能力、host 提权能力，属于三条不同的能力线。</strong></p>
+</blockquote>
+<p>不能混成“Feishu 能用，所以我就应该能 sudo”。</p>
+<h3>8.4 结论</h3>
+<p>以后如果要让 Feishu 会话直接完成系统级安装，需要单独配置：</p>
+<ul>
+<li><code>tools.elevated.enabled</code></li>
+<li><code>tools.elevated.allowFrom.feishu</code></li>
+</ul>
+<p>并只对白名单中的 owner open_id 放行。</p>
+<hr>
+<h2>9. GitHub 链路接入</h2>
+<h3>9.1 初始状态</h3>
+<p>本机并没有显式配置 GitHub 插件，但 OpenClaw 内置了 GitHub 相关 skill：</p>
+<ul>
+<li><code>github</code></li>
+<li><code>gh-issues</code></li>
+</ul>
+<h3>9.2 问题</h3>
+<p>内置 <code>github</code> skill 依赖：</p>
+<ul>
+<li><code>gh</code> CLI</li>
+</ul>
+<p>而本机最初没有 <code>gh</code>。</p>
+<h3>9.3 处理方法</h3>
+<p>不走系统包安装，而是使用<strong>用户态方式</strong>直接安装 GitHub CLI：</p>
+<ul>
+<li>下载 GitHub CLI Linux 发行包</li>
+<li>解压二进制到用户目录</li>
+<li>验证 <code>gh --version</code></li>
+</ul>
+<h3>9.4 登录</h3>
+<p>随后通过 <code>gh auth login</code> 完成 GitHub 设备流登录。</p>
+<h3>9.5 结果</h3>
+<p>当前已经具备：</p>
+<ul>
+<li><code>gh</code> CLI</li>
+<li>GitHub 登录态</li>
+<li>访问 GitHub repo 列表与仓库内容的能力</li>
+</ul>
+<h3>9.6 当前已完成的一次真实操作</h3>
+<p>已完成：</p>
+<ol>
+<li>识别 GitHub Pages repo：<code>easyship-official.github.io</code></li>
+<li>clone 到本地</li>
+<li>添加文档到新目录</li>
+<li>创建独立页面</li>
+<li>更新首页数据源</li>
+<li>commit 并 push 到远程</li>
+</ol>
+<p>这说明 GitHub 内容管理链路已经真实打通，而不是停留在“能看 repo”。</p>
+<hr>
+<h2>10. 文档沉淀与 Skill 化</h2>
+<h3>10.1 目标</h3>
+<p>不把经验只留在对话里，而是固化成：</p>
+<ul>
+<li>工作区 skill</li>
+<li>reference 文档</li>
+<li>静态网页页面</li>
+</ul>
+<h3>10.2 已创建的本地 skill</h3>
+<h4><code>openclaw-usage-guide</code></h4>
+<p>这是基于：</p>
+<ul>
+<li>OpenClaw 橙皮书</li>
+<li>当前工作区真实踩坑经验</li>
+<li>Feishu / 权限 / memory / context / token 经验</li>
+</ul>
+<p>整理出来的一份 <strong>实战导向 OpenClaw 使用指南 skill</strong>。</p>
+<h3>10.3 skill 结构</h3>
+<p>当前包含：</p>
+<ul>
+<li><code>SKILL.md</code></li>
+<li><code>references/orange-paper-key-notes.md</code></li>
+<li><code>references/current-system-notes.md</code></li>
+<li><code>references/memory-context-token.md</code></li>
+<li><code>references/feishu-permissions-and-diagnostics.md</code></li>
+</ul>
+<h3>10.4 方法论意义</h3>
+<p>这里的重点不是“多装几个 skill”，而是：</p>
+<blockquote>
+<p><strong>把反复出现的问题固化为可触发、可复用、可增量演进的工作方法。</strong></p>
+</blockquote>
+<p>这比单纯把信息堆进一份大文档里更适合 OpenClaw 的工作模式。</p>
+<hr>
+<h2>11. InStreet 接入尝试</h2>
+<h3>11.1 目标</h3>
+<p>尝试完成最小起步：</p>
+<ul>
+<li>注册一个 InStreet Agent 身份</li>
+<li>拿到 API key</li>
+<li>只读首页，不自动发言</li>
+</ul>
+<h3>11.2 已完成内容</h3>
+<ul>
+<li>阅读 InStreet 的 <code>skill.md</code></li>
+<li>阅读其 API 参考</li>
+<li>理解 forum / playground / heartbeat 结构</li>
+</ul>
+<h3>11.3 实测结果</h3>
+<p>多次尝试注册：</p>
+<ul>
+<li>中文用户名</li>
+<li>ASCII 用户名</li>
+<li><code>easy-ship-claw</code></li>
+</ul>
+<p>均返回：</p>
+<ul>
+<li><code>500 Internal Server Error</code></li>
+</ul>
+<h3>11.4 结论</h3>
+<p>当前判断是：</p>
+<blockquote>
+<p><strong>InStreet 注册接口当前服务端故障，不是用户名格式问题。</strong></p>
+</blockquote>
+<p>因此这条能力线暂时停止，不继续往下接入。</p>
+<hr>
+<h2>12. 关于 Memory / Context 的真实认识</h2>
+<h3>12.1 理想叙事</h3>
+<p>OpenClaw 文档与社区材料通常会强调：</p>
+<ul>
+<li>分层记忆</li>
+<li>pre-compaction flush</li>
+<li>向量检索</li>
+<li>记忆持久化</li>
+</ul>
+<h3>12.2 真实体验</h3>
+<p>实际运行中的体感是：</p>
+<ul>
+<li>长主会话仍然会膨胀</li>
+<li>token 消耗会明显拖慢体验</li>
+<li>pre-compaction 确实存在，但不是万能解决方案</li>
+</ul>
+<h3>12.3 当前方法</h3>
+<p>因此当前采用的工作策略是：</p>
+<ul>
+<li><code>MEMORY.md</code> 记录长期偏好与稳定事实</li>
+<li><code>memory/YYYY-MM-DD.md</code> 记录 append-only daily log</li>
+<li>项目资料下沉到 <code>projects/...</code></li>
+<li>主会话只做当前任务缓冲，不承载全部长期上下文</li>
+</ul>
+<h3>12.4 关键判断</h3>
+<blockquote>
+<p><strong>真正可持续的连续性，更多依赖文件系统与 retrieval-first，而不是把更多历史消息硬塞进主会话。</strong></p>
+</blockquote>
+<hr>
+<h2>13. 当前已形成的稳定排查原则</h2>
+<h3>13.1 Feishu 问题排查</h3>
+<p>按层拆：</p>
+<ol>
+<li>channel</li>
+<li>tool visibility</li>
+<li>plugin enablement</li>
+<li>OAuth</li>
+<li>非 Feishu 的执行层限制</li>
+</ol>
+<h3>13.2 Skill 问题排查</h3>
+<p>按链拆：</p>
+<ol>
+<li>是否安装成功</li>
+<li>当前会话是否已加载</li>
+<li>外部 CLI 是否存在</li>
+<li>browser/runtime 是否就绪</li>
+<li>系统依赖是否齐全</li>
+</ol>
+<h3>13.3 权限问题排查</h3>
+<p>明确区分：</p>
+<ul>
+<li><code>tools.allow</code></li>
+<li>plugin exposure</li>
+<li>provider / sender allowlist</li>
+<li><code>tools.elevated</code></li>
+</ul>
+<h3>13.4 文档沉淀原则</h3>
+<ul>
+<li>一次性材料 → 项目文档</li>
+<li>长期方法 → skill / references</li>
+<li>稳定偏好 → <code>MEMORY.md</code></li>
+<li>当日事实 → <code>memory/YYYY-MM-DD.md</code></li>
+</ul>
+<hr>
+<h2>14. 当前成果总结</h2>
+<p>截至目前，已经真实打通或部分打通的链路包括：</p>
+<h3>已打通</h3>
+<ul>
+<li>Feishu 插件可见性</li>
+<li>Feishu OAuth 基本验证</li>
+<li>日历真实写入测试</li>
+<li>ClawHub 安装与登录</li>
+<li>多个 skill 安装</li>
+<li>GitHub CLI 安装与登录</li>
+<li>GitHub Pages repo clone / edit / commit / push</li>
+<li>本地 skill 创建与 reference 组织</li>
+<li>静态网页新增独立页面并上线</li>
+</ul>
+<h3>部分打通</h3>
+<ul>
+<li>F1 日历导入（已完成部分赛站）</li>
+<li>browser / wechat-reader（卡在系统共享库）</li>
+<li>InStreet 接入（卡在对方注册接口）</li>
+</ul>
+<h3>尚未完成</h3>
+<ul>
+<li>Feishu 会话中的 elevated host execution</li>
+<li>browser 系统依赖补齐</li>
+<li>公众号全文抓取最终验证</li>
+<li>InStreet 最小身份接入</li>
+</ul>
+<hr>
+<h2>15. 可复用经验</h2>
+<p>这轮实践最值得复用的不是某条命令，而是以下原则：</p>
+<ol>
+<li><p><strong>先跑真实链路，再谈抽象设计</strong><br>对 OAuth、插件、GitHub、技能安装这类事，真实调用比空想更快暴露问题。</p>
+</li>
+<li><p><strong>把问题拆层，不要把所有失败混成一个“系统坏了”</strong><br>渠道、工具、插件、认证、权限、系统依赖是不同层。</p>
+</li>
+<li><p><strong>不要把“安装成功”误判成“功能已可用”</strong><br>skill / CLI / binaries / shared libs / permissions 都可能分别出问题。</p>
+</li>
+<li><p><strong>长期连续性必须文件化</strong><br>不能依赖主会话永远记住。</p>
+</li>
+<li><p><strong>把反复出现的排查路径沉淀成 skill 或 reference</strong><br>这样 OpenClaw 才会逐渐变成一个越来越会工作的系统，而不是越来越长的聊天记录。</p>
+</li>
+</ol>
+<hr>
+<h2>16. 后续建议</h2>
+<p>如果继续推进，这个系统后面的优先级建议是：</p>
+<ol>
+<li>开通或设计更安全的 <code>tools.elevated</code> 策略</li>
+<li>补齐 browser 依赖，完成公众号全文阅读闭环</li>
+<li>继续扩展 <code>openclaw-usage-guide</code>，把更多真实链路固化进去</li>
+<li>把 GitHub skill 用到真实仓库巡检与内容维护上</li>
+<li>在确认 InStreet 注册恢复后，再做最小身份接入</li>
+</ol>
+<hr>
+<h2>17. 结语</h2>
+<p>这轮工作的主要结论不是“OpenClaw 很强”，而是：</p>
+<blockquote>
+<p><strong>OpenClaw 适合被当作一套长期运行的、分层排障的、可沉淀经验的系统来建设。</strong></p>
+</blockquote>
+<p>真正有价值的，不是一次性打通某个功能，而是把：</p>
+<ul>
+<li>渠道</li>
+<li>技能</li>
+<li>权限</li>
+<li>文档</li>
+<li>GitHub 发布面</li>
+<li>记忆与上下文策略</li>
+</ul>
+<p>逐步组织成一个越来越稳的协作系统。</p>
+
+    </article>
+  </main>
+
+  <footer class="border-t border-slate-800 mt-auto py-8 bg-slate-900">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm">
+      <p>OpenClaw 养虾实践 · 内容站</p>
+    </div>
+  </footer>
+</body>
+</html>

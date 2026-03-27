@@ -22,132 +22,90 @@
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
-    .prose-custom h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; color: white; font-weight: 800; }
-    .prose-custom h2 { font-size: 1.5rem; line-height: 1.3; margin-top: 2rem; margin-bottom: 0.75rem; color: white; font-weight: 700; }
-    .prose-custom h3 { font-size: 1.125rem; line-height: 1.4; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #e2e8f0; font-weight: 700; }
-    .prose-custom p, .prose-custom li { color: #cbd5e1; line-height: 1.85; }
-    .prose-custom ul { padding-left: 1.25rem; list-style: disc; }
-    .prose-custom ol { padding-left: 1.25rem; list-style: decimal; }
-    .prose-custom blockquote { border-left: 4px solid #6366f1; padding-left: 1rem; color: #e2e8f0; margin: 1rem 0; font-style: italic; }
-    .prose-custom code { background: #0f172a; color: #e2e8f0; padding: 0.15rem 0.35rem; border-radius: 0.35rem; font-size: 0.875em; }
-    .prose-custom pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; margin: 1rem 0; }
-    .prose-custom pre code { background: transparent; padding: 0; }
-    .prose-custom strong { color: #f8fafc; }
-    .prose-custom table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-    .prose-custom th { background: #1e293b; color: white; padding: 0.5rem 1rem; text-align: left; font-weight: 600; }
-    .prose-custom td { padding: 0.5rem 1rem; border-bottom: 1px solid #334155; color: #cbd5e1; }
-    .prose-custom tr:hover td { background: #1e293b; }
     .doc-card { transition: all 0.2s; }
-    .doc-card:hover { transform: translateY(-2px); }
+    .doc-card:hover { transform: translateY(-2px); border-color: #6366f1; }
     .doc-card:hover .card-arrow { transform: translateX(4px); }
     .card-arrow { transition: transform 0.2s; }
-    #doc-viewer { display: none; }
-    #doc-viewer.visible { display: block; }
-    #card-grid.hidden { display: none; }
   </style>
 </head>
 <body class="bg-slate-900 text-slate-200 min-h-screen font-sans selection:bg-indigo-500 selection:text-white">
 
-  <!-- Header -->
   <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <span class="text-2xl">🦞</span>
         <h1 class="text-xl font-bold tracking-tight text-white">OpenClaw 养虾实践</h1>
       </div>
-      <button id="back-btn" onclick="showGrid()" class="hidden text-slate-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-800 flex items-center gap-2">
-        ← 返回目录
-      </button>
       <a href="../../index.html" class="text-slate-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-800">← 返回主页</a>
     </div>
   </header>
 
   <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-    <!-- Document Grid (landing view) -->
-    <div id="card-grid">
-      <div class="mb-10">
-        <h2 class="mt-4 text-4xl font-extrabold text-white tracking-tight">内容目录</h2>
-        <p class="mt-4 text-lg text-slate-400 max-w-3xl">
-          OpenClaw 养虾实践的技术文档沉淀。每一篇都来自真实工作流中的经验总结。
+    <div class="mb-10">
+      <h2 class="text-4xl font-extrabold text-white tracking-tight">内容目录</h2>
+      <p class="mt-4 text-lg text-slate-400 max-w-3xl">
+        OpenClaw 养虾实践的技术文档沉淀。每一篇都来自真实工作流中的经验总结。
+      </p>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+      <a href="youtube-render-pdf-skill-analysis.html" class="doc-card bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl shadow-black/10 block">
+        <div class="flex items-start justify-between mb-4">
+          <div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm text-emerald-300">
+            Skill 设计
+          </div>
+          <span class="card-arrow text-slate-400 text-xl">→</span>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">YouTube Render PDF Skill 深度分析</h3>
+        <p class="text-slate-400 text-sm leading-relaxed mb-4">
+          为什么这个 Skill 能成功？约束即自由的设计哲学，三盒系统，帧选取协议，对 manim 的启发。
         </p>
-      </div>
-
-      <div class="grid gap-6 md:grid-cols-2">
-
-        <!-- Card 1: Skill Analysis -->
-        <div class="doc-card bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl shadow-black/10 cursor-pointer" onclick="loadDoc('youtube-render-pdf-skill-analysis.md', this)">
-          <div class="flex items-start justify-between mb-4">
-            <div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm text-emerald-300">
-              Skill 设计
-            </div>
-            <span class="card-arrow text-slate-400 text-xl">→</span>
-          </div>
-          <h3 class="text-xl font-bold text-white mb-2">YouTube Render PDF Skill 深度分析</h3>
-          <p class="text-slate-400 text-sm leading-relaxed mb-4">
-            为什么这个 Skill 能成功？约束即自由的设计哲学、三盒系统的教学工程化、帧选取协议、以及对 manim 动画项目的具体启发。
-          </p>
-          <div class="flex flex-wrap gap-2 text-xs text-slate-500">
-            <span class="bg-slate-700 px-2 py-1 rounded">Harness Engineering</span>
-            <span class="bg-slate-700 px-2 py-1 rounded">Skill Design</span>
-            <span class="bg-slate-700 px-2 py-1 rounded">教学工程</span>
-          </div>
+        <div class="flex flex-wrap gap-2 text-xs text-slate-500">
+          <span class="bg-slate-700 px-2 py-1 rounded">Harness Engineering</span>
+          <span class="bg-slate-700 px-2 py-1 rounded">Skill Design</span>
+          <span class="bg-slate-700 px-2 py-1 rounded">教学工程</span>
         </div>
+      </a>
 
-        <!-- Card 2: Agent Journey -->
-        <div class="doc-card bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl shadow-black/10 cursor-pointer" onclick="loadDoc('agent-journey.md', this)">
-          <div class="flex items-start justify-between mb-4">
-            <div class="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-sm text-violet-300">
-              Agent 机制
-            </div>
-            <span class="card-arrow text-slate-400 text-xl">→</span>
+      <a href="agent-journey.html" class="doc-card bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl shadow-black/10 block">
+        <div class="flex items-start justify-between mb-4">
+          <div class="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-sm text-violet-300">
+            Agent 机制
           </div>
-          <h3 class="text-xl font-bold text-white mb-2">YouTube Render PDF Agent 心路历程</h3>
-          <p class="text-slate-400 text-sm leading-relaxed mb-4">
-            从 Agent 视角按时间顺序还原执行流程。九个阶段：接受任务 → 理解内容 → 搭框架 → 边写边找图 → 盒子判断 → 章节小结 → 蒸馏 → 编译 → 交付。
-          </p>
-          <div class="flex flex-wrap gap-2 text-xs text-slate-500">
-            <span class="bg-slate-700 px-2 py-1 rounded">Agent Loop</span>
-            <span class="bg-slate-700 px-2 py-1 rounded">约束式设计</span>
-            <span class="bg-slate-700 px-2 py-1 rounded">工作流</span>
-          </div>
+          <span class="card-arrow text-slate-400 text-xl">→</span>
         </div>
-
-        <!-- Card 3: OpenClaw Guide (existing) -->
-        <div class="doc-card bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl shadow-black/10 cursor-pointer" onclick="loadDoc('README.md', this)">
-          <div class="flex items-start justify-between mb-4">
-            <div class="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-sm text-amber-300">
-              实践报告
-            </div>
-            <span class="card-arrow text-slate-400 text-xl">→</span>
-          </div>
-          <h3 class="text-xl font-bold text-white mb-2">OpenClaw 养虾实践技术报告</h3>
-          <p class="text-slate-400 text-sm leading-relaxed mb-4">
-            OpenClaw + Feishu + GitHub + Skills 真实落地过程记录。做了什么、怎么做的、踩了什么坑、卡点是什么。
-          </p>
-          <div class="flex flex-wrap gap-2 text-xs text-slate-500">
-            <span class="bg-slate-700 px-2 py-1 rounded">OpenClaw</span>
-            <span class="bg-slate-700 px-2 py-1 rounded">Feishu</span>
-            <span class="bg-slate-700 px-2 py-1 rounded">ClawHub</span>
-          </div>
+        <h3 class="text-xl font-bold text-white mb-2">Agent 心路历程与行动流程</h3>
+        <p class="text-slate-400 text-sm leading-relaxed mb-4">
+          从 Agent 视角按时间顺序还原执行流程。九个阶段：接受任务 → 理解内容 → 搭框架 → 边写边找图 → 盒子判断 → 章节小结 → 蒸馏 → 编译 → 交付。
+        </p>
+        <div class="flex flex-wrap gap-2 text-xs text-slate-500">
+          <span class="bg-slate-700 px-2 py-1 rounded">Agent Loop</span>
+          <span class="bg-slate-700 px-2 py-1 rounded">约束式设计</span>
+          <span class="bg-slate-700 px-2 py-1 rounded">工作流</span>
         </div>
+      </a>
 
-        <!-- Add more cards here -->
+      <a href="README.html" class="doc-card bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl shadow-black/10 block">
+        <div class="flex items-start justify-between mb-4">
+          <div class="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-sm text-amber-300">
+            实践报告
+          </div>
+          <span class="card-arrow text-slate-400 text-xl">→</span>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">OpenClaw 养虾实践技术报告</h3>
+        <p class="text-slate-400 text-sm leading-relaxed mb-4">
+          OpenClaw + Feishu + GitHub + Skills 真实落地过程记录。做了什么、怎么做的、踩了什么坑。
+        </p>
+        <div class="flex flex-wrap gap-2 text-xs text-slate-500">
+          <span class="bg-slate-700 px-2 py-1 rounded">OpenClaw</span>
+          <span class="bg-slate-700 px-2 py-1 rounded">Feishu</span>
+          <span class="bg-slate-700 px-2 py-1 rounded">ClawHub</span>
+        </div>
+      </a>
 
-      </div>
     </div>
-
-    <!-- Document viewer -->
-    <div id="doc-viewer">
-      <div class="mb-6">
-        <div id="doc-breadcrumb" class="text-sm text-slate-500 mb-2"></div>
-        <h2 id="doc-title" class="text-3xl font-extrabold text-white tracking-tight"></h2>
-      </div>
-      <article class="prose-custom bg-slate-800/60 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-xl shadow-black/10">
-        <div id="doc-content" class="space-y-4"></div>
-      </article>
-    </div>
-
   </main>
 
   <footer class="border-t border-slate-800 mt-auto py-8 bg-slate-900">
@@ -155,50 +113,5 @@
       <p>OpenClaw Shrimp Guide · 内容站 · 由 Claude Code 协助构建</p>
     </div>
   </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script>
-    const docTitles = {
-      'youtube-render-pdf-skill-analysis.md': 'YouTube Render PDF Skill 深度分析',
-      'agent-journey.md': 'YouTube Render PDF Agent 心路历程与行动流程',
-      'README.md': 'OpenClaw 养虾实践技术报告'
-    };
-
-    function showGrid() {
-      document.getElementById('card-grid').classList.remove('hidden');
-      document.getElementById('doc-viewer').classList.remove('visible');
-      document.getElementById('back-btn').classList.add('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function loadDoc(filename, card) {
-      // Highlight selected card
-      document.querySelectorAll('.doc-card').forEach(c => c.classList.remove('border-indigo-500'));
-      if (card) card.classList.add('border-indigo-500');
-
-      document.getElementById('card-grid').classList.add('hidden');
-      document.getElementById('doc-viewer').classList.add('visible');
-      document.getElementById('back-btn').classList.remove('hidden');
-      document.getElementById('doc-breadcrumb').textContent = '内容目录 / ' + (docTitles[filename] || filename);
-      document.getElementById('doc-title').textContent = docTitles[filename] || filename;
-
-      const content = document.getElementById('doc-content');
-      content.innerHTML = '<div class="text-slate-500">加载中...</div>';
-
-      fetch('./' + filename)
-        .then(res => {
-          if (!res.ok) throw new Error('文档不存在');
-          return res.text();
-        })
-        .then(md => {
-          content.innerHTML = marked.parse(md);
-        })
-        .catch(err => {
-          content.innerHTML = '<div class="text-red-400">加载失败：' + err.message + '</div>';
-        });
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  </script>
 </body>
 </html>

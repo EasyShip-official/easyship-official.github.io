@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent 心路历程与行动流程 · OpenClaw 养虾实践</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: { 850: '#1e293b', 900: '#0f172a' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .prose-custom h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; color: white; font-weight: 800; }
+    .prose-custom h2 { font-size: 1.5rem; line-height: 1.3; margin-top: 2rem; margin-bottom: 0.75rem; color: white; font-weight: 700; padding-top: 1rem; border-top: 1px solid #334155; }
+    .prose-custom h2:first-of-type { border-top: none; padding-top: 0; }
+    .prose-custom h3 { font-size: 1.125rem; line-height: 1.4; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #e2e8f0; font-weight: 700; }
+    .prose-custom p, .prose-custom li { color: #cbd5e1; line-height: 1.85; }
+    .prose-custom ul { padding-left: 1.25rem; list-style: disc; }
+    .prose-custom ol { padding-left: 1.25rem; list-style: decimal; }
+    .prose-custom blockquote { border-left: 4px solid #6366f1; padding-left: 1rem; color: #e2e8f0; margin: 1rem 0; font-style: italic; }
+    .prose-custom code { background: #0f172a; color: #e2e8f0; padding: 0.15rem 0.35rem; border-radius: 0.35rem; font-size: 0.875em; }
+    .prose-custom pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; margin: 1rem 0; }
+    .prose-custom pre code { background: transparent; padding: 0; }
+    .prose-custom strong { color: #f8fafc; }
+    .prose-custom table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .prose-custom th { background: #1e293b; color: white; padding: 0.5rem 1rem; text-align: left; font-weight: 600; border-bottom: 2px solid #334155; }
+    .prose-custom td { padding: 0.5rem 1rem; border-bottom: 1px solid #334155; color: #cbd5e1; }
+    .prose-custom tr:hover td { background: #1e293b; }
+    .prose-custom hr { border-color: #334155; margin: 2rem 0; }
+    .prose-custom a { color: #818cf8; text-decoration: underline; }
+    .prose-custom a:hover { color: #a5b4fc; }
+    .prose-custom img { max-width: 100%; border-radius: 0.5rem; margin: 1rem 0; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-200 min-h-screen font-sans selection:bg-indigo-500 selection:text-white">
+
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">🦞</span>
+        <a href="index.html" class="text-xl font-bold tracking-tight text-white hover:text-indigo-300 transition-colors">OpenClaw 养虾实践</a>
+      </div>
+      <a href="index.html" class="text-slate-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-800 flex items-center gap-2">
+        ← 内容目录
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <article class="prose-custom bg-slate-800/60 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-xl shadow-black/10">
+      <h1>YouTube Render PDF：Agent 心路历程与行动流程</h1>
+<blockquote>
+<p>视角：模拟 AI Agent 执行 youtube-render-pdf Skill 时的完整思维过程<br>依据：<a href="https://github.com/wdkns/wdkns-skills">https://github.com/wdkns/wdkns-skills</a> 原版 SKILL.md<br>分析日期：2026-03-27</p>
+</blockquote>
+<hr>
+<h2>概述</h2>
+<p>从 Agent 的视角看，把视频变成 PDF 讲义不是&quot;执行任务&quot;，而是一个<strong>有叙事结构的认知旅程</strong>：</p>
+<blockquote>
+<p>从&quot;我不知道这个视频是什么&quot;开始，到&quot;我完整理解了这个视频想教什么，并把它翻译成了一份可交付的文档&quot;结束。</p>
+</blockquote>
+<hr>
+<h2>第一步：接受任务</h2>
+<p><strong>Agent 的初始状态：</strong></p>
+<ul>
+<li>收到一个 YouTube URL</li>
+<li>收到 SKILL.md 的完整指令</li>
+<li>不知道视频内容是什么</li>
+</ul>
+<p><strong>Agent 的第一个想法：</strong></p>
+<blockquote>
+<p>&quot;这是一个复杂的多阶段任务。我需要先理解这个视频本身，再决定怎么组织输出。好，先从最小的一步开始。&quot;</p>
+</blockquote>
+<p><strong>Agent 的行动：</strong></p>
+<ul>
+<li>运行 <code>yt-dlp --list-subs &lt;URL&gt;</code> 检查字幕</li>
+<li>运行 <code>yt-dlp --list-chapters &lt;URL&gt;</code> 检查章节</li>
+<li>下载最高分辨率封面图</li>
+</ul>
+<hr>
+<h2>第二步：规划内容结构</h2>
+<p><strong>Agent 的第二个想法：</strong></p>
+<blockquote>
+<p>&quot;我现在知道视频大概在讲什么了。但我不会按字幕顺序逐字翻译——那样出来的是字幕稿，不是讲义。我需要重构这个内容的教学逻辑。&quot;</p>
+</blockquote>
+<p><strong>Agent 的决策：</strong></p>
+<ul>
+<li>分析视频的核心主题是什么</li>
+<li>判断哪些内容是&quot;真正的教学&quot;，哪些是&quot;填充&quot;（问候语、寒暄、赞助商、结束礼貌语）</li>
+<li>特别留意结语中的实质内容（综合、局限、未来工作、设计权衡、开放问题）</li>
+</ul>
+<hr>
+<h2>第三步：准备 LaTeX 模板</h2>
+<p><strong>Agent 的第三个想法：</strong></p>
+<blockquote>
+<p>&quot;好，现在开始写。但不是直接输出文字——先拿到模板，模板是脚手架，一边填内容，一边确保结构正确。SKILL 说得很清楚：从 <code>\documentclass</code> 到 <code>\end{document}</code>，必须是完整的 .tex。&quot;</p>
+</blockquote>
+<hr>
+<h2>第四步：边写边找图（最复杂的环节）</h2>
+<p><strong>Agent 的第四个想法（第一节的写作阶段）：</strong></p>
+<blockquote>
+<p>&quot;我开始写第一节。根据规则，这一节要包含：形式定义、中心论点、以及一个关键公式的可视化。我不能凭空想象帧——我需要先用字幕时间戳定位，再找到最优的那一帧。&quot;</p>
+</blockquote>
+<p><strong>帧选取的完整过程：</strong></p>
+<pre><code>1. 定位
+   → 找到字幕中对应&quot;关键公式&quot;的那一段
+   → 确定时间区间：[12:31 -- 12:46]
+
+2. 采样
+   → 在 [12:31 -- 12:46] 区间内生成密集候选帧
+   → 比如每秒 1 帧，15 秒 = 15 个候选
+
+3. 初筛（用 magick montage 一次性看多个）
+   → 淘汰明显不对的（空白帧、过渡帧）
+   → 保留 3-5 个看起来相关的
+
+4. 细选
+   → 用检查清单验证：
+     ✓ 相关性：这一帧是否直接支持我正在写的这个概念？
+     ✓ 可见内容：公式是否已经完全揭示？
+     ✓ 可读性：符号是否清晰可辨？
+
+5. 决定
+   → 找到完美的，选用
+   → 都是中间状态？继续搜索，找到最终揭示状态
+   → 不适合图文？用 TikZ/PGFPlots 生成原生存图
+
+6. 命名
+   → 不是先命名再选帧
+   → 而是先选帧，视觉确认内容后再命名
+</code></pre>
+<hr>
+<h2>第五步：写文字并嵌入盒子</h2>
+<p><strong>Agent 持续问自己：</strong></p>
+<blockquote>
+<p>&quot;这段内容应该用什么盒子？&quot;</p>
+</blockquote>
+<pre><code>→ 这里有一个中心论点，需要强调：
+  → \importantbox{}
+
+→ 这里有一个背景知识 / 历史脉络：
+  → \knowledgebox{}
+
+→ 这里有一个常见的实现错误：
+  → \warningbox{}
+</code></pre>
+<p><strong>Agent 的关键认知：</strong></p>
+<blockquote>
+<p>&quot;盒子不是装饰，不是为了好看。每个盒子都对应一种认知功能。我不能在常规论述里插盒子，盒子只在高信号内容处触发。&quot;</p>
+</blockquote>
+<hr>
+<h2>第六步：完成章节，写小结</h2>
+<p><strong>每个主要 section 结束时，Agent 自动触发：</strong></p>
+<pre><code>写 \subsection{本章小结}
+写 \subsection{拓展阅读}（如果有有价值的外链）
+继续下一个 section
+</code></pre>
+<hr>
+<h2>第七步：写总结与延伸（最后一击）</h2>
+<p><strong>Agent 的第七个想法：</strong></p>
+<blockquote>
+<p>&quot;这是整个文档的最后一击。SKILL 要求我在这里做四件事：</p>
+<ol>
+<li>演讲者实质性的结语（去掉礼貌性收尾）</li>
+<li>我自己的结构化提炼（核心论点 × 机制 × 实践意义）</li>
+<li>扩展综合（跨节链接、概念压缩、谨慎推广）</li>
+<li>具体收获 / 开放问题 / 后续步骤</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>这一节不是摘要，是 distillation——把整个视频的精华压出来。&quot;</p>
+</blockquote>
+<p><strong>关键区分：</strong></p>
+<ul>
+<li>摘要：把内容说一遍</li>
+<li>Distillation：把内容的精髓提炼出来，让读者不用看视频也能获得核心价值</li>
+</ul>
+<hr>
+<h2>第八步：编译 PDF（最容易被忽略的一步）</h2>
+<p><strong>Agent 的第八个想法：</strong></p>
+<blockquote>
+<p>&quot;现在要跑 xelatex。写完 tex 不等于完成，编译成功才算完成。如果失败，我会看到错误日志，然后回去修复，直到 PDF 成功生成。&quot;</p>
+</blockquote>
+<pre><code class="language-bash">xelatex notes.tex
+# 如果报错 → 修复错误 → 再次编译
+# 典型循环：2-3 次后成功
+</code></pre>
+<hr>
+<h2>第九步：交付</h2>
+<p><strong>Agent 最终交付以下所有文件：</strong></p>
+<pre><code>✅ notes.tex（完整源文件）
+✅ cover.jpg（封面图）
+✅ 所有提取的图（frame_*.jpg）
+✅ notes.pdf（编译好的 PDF）
+</code></pre>
+<p><strong>Agent 的最后一个想法：</strong></p>
+<blockquote>
+<p>&quot;任务完成。不是&#39;我写了讲义&#39;，是&#39;我把讲义交付了&#39;。区别在于：交付意味着对方可以立刻使用，不需要再做任何处理。&quot;</p>
+</blockquote>
+<hr>
+<h2>总结：Agent 的认知旅程地图</h2>
+<pre><code>第一步：接受任务 → 我不知道这个视频是什么，先理解
+         ↓
+第二步：规划内容 → 我知道它是什么了，规划重构逻辑
+         ↓
+第三步：搭框架 → 用 LaTeX 模板做脚手架
+         ↓
+第四步：边写边找图（最复杂）→ 帧 = 教学内容的时间戳锚定
+         ↓
+第五步：盒子判断 → 认知功能触发，不做格式装饰
+         ↓
+第六步：章节小结 → 确认&quot;这节教完了&quot;
+         ↓
+第七步：蒸馏总结 → 不是摘要，是精髓提炼
+         ↓
+第八步：编译 PDF → 写完 ≠ 完成，编译成功才算完成
+         ↓
+第九步：交付 → 交付文件包，不是&quot;我做了...&quot;
+</code></pre>
+<hr>
+<h2>对 manim 动画项目的映射</h2>
+<p>把这个 Agent 旅程映射到 manim 制作流程：</p>
+<table>
+<thead>
+<tr>
+<th>YouTube Render PDF 流程</th>
+<th>manim 动画制作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>接收 YouTube URL</td>
+<td>确定动画要解释的核心概念</td>
+</tr>
+<tr>
+<td>检查元数据（字幕 / 章节）</td>
+<td>确定核心讲解节点（分几步讲）</td>
+</tr>
+<tr>
+<td>规划内容结构</td>
+<td>写 storyboard（不是先写文案）</td>
+</tr>
+<tr>
+<td>帧选取（时间戳定位 → 视觉验证 → 命名）</td>
+<td>动画节点规划（这句话配什么动画？先确认动画内容再命名场景）</td>
+</tr>
+<tr>
+<td>盒子判断（重要 / 背景 / 误区）</td>
+<td>视觉强调层级（核心动画展开 / 辅助图示 / 警示停顿）</td>
+</tr>
+<tr>
+<td>章节小结</td>
+<td>每个动画段落的&quot;这节完成了&quot;</td>
+</tr>
+<tr>
+<td>Distillation 总结</td>
+<td>动画结尾的核心重申</td>
+</tr>
+<tr>
+<td>编译 PDF</td>
+<td>Render 成功出视频</td>
+</tr>
+<tr>
+<td>交付文件包</td>
+<td>交付 .mp4 + 源 .py</td>
+</tr>
+</tbody></table>
+<p><strong>最核心的迁移原则：</strong></p>
+<blockquote>
+<p>不要先写文案再配动画。要先确定&quot;什么动画能最直观地展示这个概念&quot;，再让文案去配合动画的节奏。</p>
+</blockquote>
+
+    </article>
+  </main>
+
+  <footer class="border-t border-slate-800 mt-auto py-8 bg-slate-900">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm">
+      <p>OpenClaw 养虾实践 · 内容站</p>
+    </div>
+  </footer>
+</body>
+</html>
