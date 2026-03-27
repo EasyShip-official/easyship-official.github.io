@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anthropic 官方 Skill Creator 深度分析 · OpenClaw 养虾实践</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { slate: { 850: '#1e293b', 900: '#0f172a' }}}}
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .prose-custom h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; color: white; font-weight: 800; }
+    .prose-custom h2 { font-size: 1.5rem; line-height: 1.3; margin-top: 2rem; margin-bottom: 0.75rem; color: white; font-weight: 700; padding-top: 1rem; border-top: 1px solid #334155; }
+    .prose-custom h2:first-of-type { border-top: none; padding-top: 0; }
+    .prose-custom h3 { font-size: 1.125rem; line-height: 1.4; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #e2e8f0; font-weight: 700; }
+    .prose-custom p, .prose-custom li { color: #cbd5e1; line-height: 1.85; }
+    .prose-custom ul { padding-left: 1.25rem; list-style: disc; }
+    .prose-custom ol { padding-left: 1.25rem; list-style: decimal; }
+    .prose-custom blockquote { border-left: 4px solid #6366f1; padding-left: 1rem; color: #e2e8f0; margin: 1rem 0; font-style: italic; }
+    .prose-custom code { background: #0f172a; color: #e2e8f0; padding: 0.15rem 0.35rem; border-radius: 0.35rem; font-size: 0.875em; }
+    .prose-custom pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; margin: 1rem 0; }
+    .prose-custom pre code { background: transparent; padding: 0; }
+    .prose-custom strong { color: #f8fafc; }
+    .prose-custom table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .prose-custom th { background: #1e293b; color: white; padding: 0.5rem 1rem; text-align: left; font-weight: 600; border-bottom: 2px solid #334155; }
+    .prose-custom td { padding: 0.5rem 1rem; border-bottom: 1px solid #334155; color: #cbd5e1; }
+    .prose-custom tr:hover td { background: #1e293b; }
+    .prose-custom hr { border-color: #334155; margin: 2rem 0; }
+    .prose-custom a { color: #818cf8; text-decoration: underline; }
+    .prose-custom img { max-width: 100%; border-radius: 0.5rem; margin: 1rem 0; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-200 min-h-screen font-sans selection:bg-indigo-500 selection:text-white">
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">🦞</span>
+        <a href="index.html" class="text-xl font-bold tracking-tight text-white hover:text-indigo-300 transition-colors">OpenClaw 养虾实践</a>
+      </div>
+      <a href="index.html" class="text-slate-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-800 flex items-center gap-2">← 内容目录</a>
+    </div>
+  </header>
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <article class="prose-custom bg-slate-800/60 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-xl shadow-black/10">
+      <h1>Anthropic 官方 Skill Creator 深度分析</h1>
+<blockquote>
+<p>GitHub: <a href="https://github.com/anthropics/skills">https://github.com/anthropics/skills</a><br>路径: <code>skills/skill-creator/</code><br>104k ⭐ | MIT License<br>分析日期: 2026-03-28</p>
+</blockquote>
+<hr>
+<h2>一、Skill 是什么</h2>
+<p>Skill Creator 是 Anthropic 官方的<strong>技能创建工具</strong>——用 AI 来创建 AI Skill 的 Skill。</p>
+<p>它的功能：</p>
+<ul>
+<li>从零创建新 Skill</li>
+<li>修改和优化已有 Skill</li>
+<li>运行测试评估（Eval）验证 Skill 效果</li>
+<li>基准测试与方差分析</li>
+<li>优化 Skill description 提升触发准确率</li>
+</ul>
+<hr>
+<h2>二、整体流程概览</h2>
+<ol>
+<li>决定你想让这个 Skill 做什么，大致怎么做</li>
+<li>写一版草稿</li>
+<li>创建几个测试提示词，然后用&quot;加载了这个 Skill 的 Claude&quot;跑一遍</li>
+<li>帮助用户从定性和定量两个角度评估结果</li>
+<li>根据反馈重写 Skill</li>
+<li>重复直到满意</li>
+<li>扩大测试集，在更大规模上重试</li>
+</ol>
+<hr>
+<h2>三、Harness 哲学分析（核心）</h2>
+<h3>1. 渐进式上下文加载（Progressive Disclosure）</h3>
+<p>Skill 使用三级加载系统：</p>
+<ol>
+<li><strong>元数据</strong>（name + description）——始终在上下文中（~100 词）</li>
+<li><strong>SKILL.md 正文</strong>——Skill 触发时在上下文中（理想 &lt;500 行）</li>
+<li><strong>捆绑资源</strong>——按需加载（无限，脚本可执行而不加载）</li>
+</ol>
+<p><strong>核心洞察：</strong> 上下文不是越多越好，是越精确越好。这和 Claude Code 的 <code>--resume</code> 和 <code>claude.yaml</code> 的思路一致。</p>
+<h3>2. Eval 驱动迭代（Eval-Driven Iteration）</h3>
+<p>每一步都有量化基准：pass_rate、time、tokens。通过率从 65% → 75% → 85%，清楚看到进步。</p>
+<p><strong>核心洞察：</strong> 约束式反馈循环。不是拍脑袋决定 Skill 好不好，而是用客观指标验证。</p>
+<h3>3. Baseline 对比（with-skill vs without）</h3>
+<p>每个测试用例同时跑两个 subagent——一个有 Skill，一个没有。</p>
+<p><strong>核心洞察：</strong> 回答根本问题：<strong>这个 Skill 到底有没有用？</strong> 加入这个机制，比没有它的时候好多少？</p>
+<h3>4. Description 要&quot;强制推&quot;（PUSHY 原则）</h3>
+<blockquote>
+<p>&quot;目前 Claude 有&#39;触发不足&#39;的问题——该用 Skill 的时候不用。所以 description 要写得稍微&#39;强制推&#39;一点。&quot;</p>
+</blockquote>
+<p><strong>核心洞察：</strong> Skill 的触发是主动行为，不是被动匹配。写得明确+强制，才能确保在需要的时候被调用。</p>
+<h3>5. Grader 双重职责：评产出 + 批评估本身</h3>
+<p>Grader 不仅要评分，还要批判评估本身——好的断言要能区分真正的成功和表面合规。</p>
+<p><strong>核心洞察：</strong> 元评估。很多 harness 失败不是因为机制不好，而是因为评估标准太松。</p>
+<h3>6. 三盒系统的影子</h3>
+<p>Skill Creator 的结构本身就是一种三盒系统：</p>
+<table>
+<thead>
+<tr>
+<th>盒子</th>
+<th>对应阶段</th>
+<th>认知功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Intent Box</strong></td>
+<td>捕获意图</td>
+<td>核心：用户真正想解决什么问题</td>
+</tr>
+<tr>
+<td><strong>Context Box</strong></td>
+<td>访谈研究</td>
+<td>背景：边缘情况、依赖、限制</td>
+</tr>
+<tr>
+<td><strong>Eval Box</strong></td>
+<td>测试评估</td>
+<td>验证：客观可衡量的成功标准</td>
+</tr>
+</tbody></table>
+<h3>7. 时间线捕获（Timing Capture）</h3>
+<p>每次 subagent 完成后立即捕获 <code>total_tokens</code> 和 <code>duration_ms</code>。</p>
+<p><strong>核心洞察：</strong> 可观测性基础设施。没有计时就不知道优化有没有效果。Benchmark 数据要落在磁盘上。</p>
+<hr>
+<h2>四、Skill 创建六步</h2>
+<ol>
+<li><strong>Capture Intent</strong> — 从对话历史提取，或用户补充确认</li>
+<li><strong>Interview and Research</strong> — 主动问边缘情况、依赖项、成功标准</li>
+<li><strong>Write SKILL.md</strong> — name / description（PUSHY）/ compatibility / 正文</li>
+<li><strong>Write Test Cases</strong> — 2-3 个真实测试提示词，先不写断言</li>
+<li><strong>Run Evals</strong> — 同时跑有 Skill 版和基线版，捕获计时数据</li>
+<li><strong>Grade &amp; Iterate</strong> — Grader 评分，聚合 benchmark，重写，直到满意</li>
+</ol>
+<hr>
+<h2>五、Skill 结构规范</h2>
+<pre><code>skill-name/
+├── SKILL.md（必需）
+│   ├── YAML frontmatter（name, description 必需）
+│   └── Markdown 说明
+└── 捆绑资源（可选）
+    ├── scripts/    - 确定性/重复性任务
+    ├── references/ - 按需加载的文档（&gt;300行要加目录）
+    └── assets/     - 输出中使用的文件
+</code></pre>
+<hr>
+<h2>六、写作风格要点</h2>
+<ul>
+<li>指令用祈使句</li>
+<li>解释为什么重要，而不是用一堆 MUST</li>
+<li>先写草稿，用新鲜眼光看一遍再改进</li>
+<li>Description 要 PUSHY（强制推）</li>
+<li>SKILL.md 理想 &lt;500 行，快到限制时拆分 references</li>
+</ul>
+<hr>
+<h2>七、Eval 数据模型</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>evals/evals.json</code></td>
+<td>测试用例定义</td>
+</tr>
+<tr>
+<td><code>grading.json</code></td>
+<td>Grader 评分结果</td>
+</tr>
+<tr>
+<td><code>metrics.json</code></td>
+<td>执行指标（tool calls, steps, errors）</td>
+</tr>
+<tr>
+<td><code>timing.json</code></td>
+<td>计时数据（token, duration）</td>
+</tr>
+<tr>
+<td><code>benchmark.json</code></td>
+<td>聚合基准（pass_rate, mean±stddev）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>八、改进循环核心逻辑</h2>
+<ol>
+<li><strong>从反馈中泛化</strong> — 不要只对那几个测试例子做过度拟合，尝试不同的隐喻或模式</li>
+<li><strong>保持提示词精简</strong> — 删掉没有产生价值的内容，读 transcript 不只看最终产出</li>
+<li><strong>解释 why</strong> — 不要写全大写的 ALWAYS/NEVER，解释推理过程</li>
+<li><strong>寻找跨用例的重复工作</strong> — 如果 3 个测试用例都独立写了类似的脚本，Skill 应该捆绑它</li>
+</ol>
+<hr>
+<h2>九、对你的启发</h2>
+<h3>直接可迁移</h3>
+<ol>
+<li><strong>Description 写 PUSHY</strong>：明确列出触发场景，而不是猜测触发词</li>
+<li><strong>三级加载原则</strong>：frontmatter / 正文 / scripts &amp; references 分层</li>
+<li><strong>快速冒烟测试</strong>：每次改完 Skill，跑 2-3 个真实用例，记录通过率</li>
+</ol>
+<h3>需要思考的</h3>
+<ol start="4">
+<li><strong>Eval 的成本</strong>：Anthropic 的完整流程很重。你的场景是否需要这么重？</li>
+<li><strong>Grader 自我批判</strong>：你的 Skill 有没有可能加类似的<strong>自我检查</strong>逻辑？</li>
+</ol>
+<hr>
+<h2>十、相关资源</h2>
+<ul>
+<li>GitHub: <a href="https://github.com/anthropics/skills%EF%BC%88104k">https://github.com/anthropics/skills（104k</a> ⭐）</li>
+<li>Skill Creator: <code>skills/skill-creator/SKILL.md</code></li>
+<li>Grader Agent: <code>skills/skill-creator/agents/grader.md</code></li>
+<li>Schema 定义: <code>skills/skill-creator/references/schemas.md</code></li>
+</ul>
+
+    </article>
+  </main>
+  <footer class="border-t border-slate-800 mt-auto py-8 bg-slate-900">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm">
+      <p>OpenClaw 养虾实践 · 内容站</p>
+    </div>
+  </footer>
+</body>
+</html>
