@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent 工程里，真正拖后腿的不是模型 · OpenClaw 养虾实践</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { slate: { 850: '#1e293b', 900: '#0f172a' }}}}
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .prose-custom h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; color: white; font-weight: 800; }
+    .prose-custom h2 { font-size: 1.5rem; line-height: 1.3; margin-top: 2rem; margin-bottom: 0.75rem; color: white; font-weight: 700; padding-top: 1rem; border-top: 1px solid #334155; }
+    .prose-custom h2:first-of-type { border-top: none; padding-top: 0; }
+    .prose-custom h3 { font-size: 1.125rem; line-height: 1.4; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #e2e8f0; font-weight: 700; }
+    .prose-custom p, .prose-custom li { color: #cbd5e1; line-height: 1.85; }
+    .prose-custom ul { padding-left: 1.25rem; list-style: disc; }
+    .prose-custom ol { padding-left: 1.25rem; list-style: decimal; }
+    .prose-custom blockquote { border-left: 4px solid #6366f1; padding-left: 1rem; color: #e2e8f0; margin: 1rem 0; font-style: italic; }
+    .prose-custom code { background: #0f172a; color: #e2e8f0; padding: 0.15rem 0.35rem; border-radius: 0.35rem; font-size: 0.875em; }
+    .prose-custom pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; margin: 1rem 0; }
+    .prose-custom pre code { background: transparent; padding: 0; }
+    .prose-custom strong { color: #f8fafc; }
+    .prose-custom table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .prose-custom th { background: #1e293b; color: white; padding: 0.5rem 1rem; text-align: left; font-weight: 600; border-bottom: 2px solid #334155; }
+    .prose-custom td { padding: 0.5rem 1rem; border-bottom: 1px solid #334155; color: #cbd5e1; }
+    .prose-custom tr:hover td { background: #1e293b; }
+    .prose-custom hr { border-color: #334155; margin: 2rem 0; }
+    .prose-custom a { color: #818cf8; text-decoration: underline; }
+    .prose-custom a:hover { color: #a5b4fc; }
+    .prose-custom img { max-width: 100%; border-radius: 0.5rem; margin: 1rem 0; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-200 min-h-screen font-sans selection:bg-indigo-500 selection:text-white">
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">🦞</span>
+        <a href="index.html" class="text-xl font-bold tracking-tight text-white hover:text-indigo-300 transition-colors">OpenClaw 养虾实践</a>
+      </div>
+      <a href="index.html" class="text-slate-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-800 flex items-center gap-2">← 内容目录</a>
+    </div>
+  </header>
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <article class="prose-custom bg-slate-800/60 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-xl shadow-black/10">
+      <h1>Agent 工程里，真正拖后腿的不是模型</h1>
+<p>写完 Claude Code 那篇之后，我对 Agent 底层的理解总觉得差一口气。最近把资料、开源实现和自己的代码又过了一遍，整理出这篇。</p>
+<p>结论先说：<strong>更贵的模型带来的提升，很多时候没有想象中那么大。真正决定系统能不能稳定运行的，是 Harness、上下文工程和工具设计这几块外围工程条件。</strong> 调试 Agent 行为时，应优先检查工具定义，因为大多数工具选择错误都出在描述不准确，不在模型能力。</p>
+<hr>
+<h2>Agent Loop 本身并不复杂</h2>
+<p>Agent Loop 抽象出来不到 20 行代码：感知→决策→行动→反馈，循环往复，直到模型返回纯文本。</p>
+<p>看过不少 Agent 实现，结构大同小异。主循环本身相当稳定，从最小实现一路扩展到子 Agent、上下文压缩和 Skills 加载，核心逻辑几乎没有变化。新增能力通常叠加在循环外部，而不是改动循环内部。</p>
+<p>模型负责推理，外部系统负责状态和边界。这个分工一旦确定，核心循环很少需要频繁调整。</p>
+<h2>Harness 比模型更关键</h2>
+<p>Harness 是指围绕 Agent 构建的测试、验证与约束基础设施，至少包括四个部分：<strong>验收基线、执行边界、反馈信号和回退手段</strong>。</p>
+<p>OpenAI 内部有一个数据：3 个工程师 5 个月写了百万行代码，将近 1500 个 PR，是传统开发速度的 10 倍。这个速度靠的不是模型有多强，而是几个工程决策做对了：</p>
+<ul>
+<li><strong>约束编码化而非文档化</strong>：写在文档里的规范容易被忽略，编码进 Linter、类型系统或 CI 规则里的约束才具备可执行性</li>
+<li><strong>端到端自主</strong>：查日志、查指标、查追踪，都由 Agent 主动完成，不需要人告知错误</li>
+<li><strong>最小化合并阻力</strong>：测试偶发失败用重跑处理，而不是阻塞进度</li>
+</ul>
+<p>一个判断值得记住：Harness 要做的事情，是把任务推进&quot;目标明确、结果可以自动验证&quot;的区域，让对错有机器可以执行的判断标准，而不是靠人盯。</p>
+<h2>上下文分层是稳定性的根因</h2>
+<p>Transformer 的注意力复杂度是 O(n²)，上下文越长，关键信号越容易被噪声稀释。实践里最常见的失效模式是：无关内容一旦占到上下文的大头，Agent 的决策质量就会明显下滑。这类现象通常被叫作 Context Rot，很多看起来像模型能力不足的问题，往往可以追溯到上下文组织不当。</p>
+<p>解决方式是按信息的使用频率和稳定性<strong>分层管理</strong>：</p>
+<ul>
+<li><strong>常驻层</strong>：身份定义、项目约定、绝对禁止项，保持短、硬、可执行</li>
+<li><strong>按需加载</strong>：Skills 和领域知识，描述符常驻，完整内容触发时再注入</li>
+<li><strong>运行时注入</strong>：当前时间、渠道 ID 等动态信息，每轮按需拼入</li>
+<li><strong>记忆层</strong>：跨会话经验写入 MEMORY.md，不直接进系统提示，需要时才读取</li>
+<li><strong>系统层</strong>：Hooks 或代码规则处理确定性逻辑，完全不进上下文</li>
+</ul>
+<p>别把确定性逻辑放进上下文。凡是可以通过 Hooks、代码规则或工具约束表达的内容，都应交给外部系统处理，而不是让模型反复读取。</p>
+<h2>Skills 按需加载的精髓</h2>
+<p>Skills 是上下文工程里非常有效的一种模式，核心思路是：<strong>系统提示只保留索引，完整知识按需加载</strong>。</p>
+<p>Skill 描述有两个写法陷阱：</p>
+<p><strong>第一个是字数</strong>。低效的描述约 45 tokens，高效的描述约 9 tokens。路由准确率差距不大，但每个启用的 Skill 描述符都常驻上下文，Skill 一多，长描述的累积成本很可观。</p>
+<p><strong>第二个是精度</strong>。描述太短等于任何相关工作都能触发，路由会乱。真正有效的描述符是路由条件，不是功能介绍——&quot;何时该用我&quot;比&quot;我能做什么&quot;重要得多。</p>
+<p>一个反直觉的地方：<strong>稳定的大系统提示，比频繁变动的小提示实际成本更低</strong>。写入成本只付一次，后续每次调用读取的折扣可以达到 90%。</p>
+<h2>工具设计决定 Agent 能做什么</h2>
+<p>上下文决定模型能看到什么，工具决定模型能做什么。工具定义的质量比数量更关键。仅 5 个 MCP 服务器就可能带来约 55,000 tokens 的工具定义开销，相当于在 200K 上下文里还没开始对话就用掉了近三成。</p>
+<p>工具问题多数不在数量不够，而在<strong>选不对、描述看不懂、返回一堆没用的、出了错 Agent 也不知道怎么改</strong>。</p>
+<p>工具设计大致经历了三个阶段：</p>
+<ul>
+<li><strong>第一代，API 封装</strong>：每个 API Endpoint 对应一个工具，粒度过细</li>
+<li><strong>第二代，ACI（Agent-Computer Interface）</strong>：工具对应 Agent 要完成的目标，而不是底层 API 操作</li>
+<li><strong>第三代，Advanced Tool Use</strong>：动态工具发现、代码编排、示例驱动</li>
+</ul>
+<p>ACI 原则里最关键的一条：<strong>结构化错误要给出修正建议</strong>，而不是只返回 &quot;Error: update failed&quot;。Agent 报错后能否快速修回来，和工具设计的关系更大。</p>
+<h2>记忆系统是基础设施，不是事后补上的</h2>
+<p>Agent 不具备原生的时间连续性。会话结束后，上下文随之清空，下一次启动时也不会自动保留此前状态。要让系统具备跨会话的一致性，记忆层得单独设计。</p>
+<p>四种记忆各司其职：</p>
+<ul>
+<li><strong>上下文窗口</strong>：工作记忆，token 有限，得主动管理</li>
+<li><strong>Skills</strong>：程序性记忆，按需加载不默认常驻</li>
+<li><strong>JSONL 会话历史</strong>：情景记忆，磁盘持久化，支持跨会话检索</li>
+<li><strong>MEMORY.md</strong>：语义记忆，Agent 主动写入的稳定事实，每次启动时注入</li>
+</ul>
+<p>记忆整合最关键的不是摘要写得多漂亮，而是<strong>流程本身必须可回退</strong>。系统只移动指针，不删除原始消息，即使整合失败，也还能回到原始存档继续工作。</p>
+<hr>
+<p>工程上把这些做好，不靠砸钱上最新模型，Agent 的稳定性和实际产出就能上一个台阶。模型是加速器，但基础设施才是地基——这个判断在代码生成这类高可验证任务上最成立，也最容易被忽视。</p>
+
+    </article>
+  </main>
+  <footer class="border-t border-slate-800 mt-auto py-8 bg-slate-900">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm">
+      <p>OpenClaw 养虾实践</p>
+    </div>
+  </footer>
+</body>
+</html>
